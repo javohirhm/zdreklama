@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>ZDREKLAMA — Title</title>
+<style>
+  @font-face {
+    font-family: "Manrope";
+    src: url("/node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2") format("woff2-variations");
+    font-weight: 200 800;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "DM Mono";
+    src: url("/node_modules/@fontsource/dm-mono/files/dm-mono-latin-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-display: block;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: #0e2c1e;
+  }
+
+  body {
+    font-family: "Manrope", "Avenir Next", sans-serif;
+    color: #fbfaf5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 96px 120px;
+    background:
+      radial-gradient(900px 620px at 78% 34%, rgba(232, 163, 38, 0.16), transparent 62%),
+      radial-gradient(1200px 800px at 10% 100%, rgba(30, 80, 58, 0.55), transparent 65%),
+      linear-gradient(135deg, #143b2b 0%, #103322 52%, #0d2719 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* faint ledger grid */
+  .grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 120px 120px;
+    mask-image: radial-gradient(1200px 760px at 50% 50%, #000 20%, transparent 78%);
+    -webkit-mask-image: radial-gradient(1200px 760px at 50% 50%, #000 20%, transparent 78%);
+  }
+
+  /* abstract sign board */
+  .board {
+    position: absolute;
+    right: 118px;
+    top: 190px;
+    width: 520px;
+    height: 620px;
+    border: 1.5px solid rgba(251, 250, 245, 0.14);
+    border-radius: 14px;
+    background: linear-gradient(160deg, rgba(251, 250, 245, 0.06), rgba(251, 250, 245, 0.015));
+    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    animation: boardIn 1200ms 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .board::before,
+  .board::after {
+    content: "";
+    position: absolute;
+    left: 64px;
+    height: 2px;
+    border-radius: 2px;
+    background: rgba(251, 250, 245, 0.16);
+  }
+  .board::before { top: 132px; width: 392px; }
+  .board::after { top: 176px; width: 268px; }
+  .board .bar {
+    position: absolute;
+    left: 64px;
+    top: 244px;
+    width: 150px;
+    height: 10px;
+    border-radius: 5px;
+    background: #e8a326;
+    box-shadow: 0 0 40px rgba(232, 163, 38, 0.55);
+  }
+  .board .post {
+    position: absolute;
+    bottom: -54px;
+    width: 10px;
+    height: 54px;
+    background: rgba(251, 250, 245, 0.18);
+  }
+  .board .post.l { left: 96px; }
+  .board .post.r { right: 96px; }
+
+  .content {
+    position: relative;
+    max-width: 1040px;
+  }
+
+  .rule {
+    width: 76px;
+    height: 4px;
+    border-radius: 4px;
+    background: #e8a326;
+    transform-origin: left center;
+    animation: ruleIn 700ms 150ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .lockup {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 34px;
+    opacity: 0;
+    animation: riseIn 700ms 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .mark {
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border: 1.5px solid rgba(232, 163, 38, 0.4);
+    border-radius: 12px;
+    color: #e8a326;
+    background: rgba(232, 163, 38, 0.08);
+  }
+
+  .wordmark {
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: 0.3em;
+    line-height: 1.1;
+    color: #fbfaf5;
+  }
+
+  .tagline {
+    font-family: "DM Mono", monospace;
+    font-size: 13px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: #9db7a6;
+    margin-top: 6px;
+  }
+
+  h1 {
+    margin-top: 46px;
+    font-size: 90px;
+    line-height: 1.04;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+  }
+  h1 .l1 { display: block; opacity: 0; animation: riseIn 800ms 450ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  h1 .l2 { display: block; opacity: 0; animation: riseIn 800ms 570ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  h1 em { font-style: normal; color: #e8a326; }
+
+  p.lede {
+    margin-top: 34px;
+    max-width: 830px;
+    font-size: 27px;
+    line-height: 1.55;
+    font-weight: 500;
+    color: #cdd9cf;
+    opacity: 0;
+    animation: riseIn 800ms 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .foot {
+    position: absolute;
+    left: 120px;
+    right: 120px;
+    bottom: 74px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: "DM Mono", monospace;
+    font-size: 12.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(220, 230, 215, 0.55);
+    border-top: 1px solid rgba(251, 250, 245, 0.12);
+    padding-top: 22px;
+    opacity: 0;
+    animation: riseIn 800ms 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .foot .live { color: #e8a326; }
+
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(26px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes ruleIn {
+    from { opacity: 0; transform: scaleX(0); }
+    to { opacity: 1; transform: scaleX(1); }
+  }
+  @keyframes boardIn {
+    from { opacity: 0; transform: translateY(28px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="grid"></div>
+
+    <div class="board">
+      <div class="bar"></div>
+      <div class="post l"></div>
+      <div class="post r"></div>
+    </div>
+
+    <div class="content">
+      <div class="rule"></div>
+      <div class="lockup">
+        <div class="mark">
+          <svg width="30" height="30" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <rect x="7" y="12" width="34" height="24" rx="2.5" stroke="currentColor" stroke-width="2.2" />
+            <path d="M14 7.5v4.5M34 7.5v4.5M18 41l6-6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+            <path d="M14 20h20M14 26h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+          </svg>
+        </div>
+        <div>
+          <div class="wordmark">ZD REKLAMA</div>
+          <div class="tagline">Signage production workspace</div>
+        </div>
+      </div>
+
+      <h1>
+        <span class="l1">Signage production,</span>
+        <span class="l2"><em>in control.</em></span>
+      </h1>
+
+      <p class="lede">
+        Cash, orders, materials and crew — every number traced back to the work that produced it.
+      </p>
+    </div>
+
+    <div class="foot">
+      <span><span class="live">●</span>&nbsp; Kokand · UZS</span>
+      <span>Overview · Money · Orders · Materials · Team · Clients</span>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>ZDREKLAMA — Caption</title>
+<style>
+  @font-face {
+    font-family: "Manrope";
+    src: url("/node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2") format("woff2-variations");
+    font-weight: 200 800;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "DM Mono";
+    src: url("/node_modules/@fontsource/dm-mono/files/dm-mono-latin-500-normal.woff2") format("woff2");
+    font-weight: 500;
+    font-display: block;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  .caption {
+    position: absolute;
+    left: 92px;
+    bottom: 62px;
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+    max-width: 1240px;
+    padding: 22px 34px 22px 26px;
+    border-radius: 18px;
+    background: rgba(251, 250, 245, 0.94);
+    box-shadow:
+      0 24px 60px rgba(21, 34, 25, 0.26),
+      0 2px 0 rgba(251, 250, 245, 0.6) inset;
+  }
+
+  .bar {
+    width: 5px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #e8a326, #c78312);
+    box-shadow: 0 0 20px rgba(232, 163, 38, 0.45);
+  }
+
+  .kicker {
+    font-family: "DM Mono", monospace;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: #a06a0d;
+    margin-bottom: 10px;
+  }
+
+  .text {
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1.22;
+    letter-spacing: -0.018em;
+    color: #152219;
+  }
+</style>
+</head>
+<body>
+  <div class="caption">
+    <div class="bar"></div>
+    <div>
+      <div class="kicker" id="kicker"></div>
+      <div class="text" id="text"></div>
+    </div>
+  </div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    document.getElementById("kicker").textContent = params.get("k") || "";
+    document.getElementById("text").textContent = params.get("t") || "";
+  </script>
+</body>
+</html>

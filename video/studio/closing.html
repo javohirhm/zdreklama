@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>ZDREKLAMA — Closing</title>
+<style>
+  @font-face {
+    font-family: "Manrope";
+    src: url("/node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2") format("woff2-variations");
+    font-weight: 200 800;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "DM Mono";
+    src: url("/node_modules/@fontsource/dm-mono/files/dm-mono-latin-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-display: block;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: #0e2c1e;
+  }
+
+  body {
+    font-family: "Manrope", "Avenir Next", sans-serif;
+    color: #fbfaf5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    background:
+      radial-gradient(760px 520px at 50% 42%, rgba(232, 163, 38, 0.18), transparent 64%),
+      linear-gradient(135deg, #143b2b 0%, #103322 52%, #0d2719 100%);
+  }
+
+  .grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 120px 120px;
+    mask-image: radial-gradient(1000px 700px at 50% 50%, #000 18%, transparent 76%);
+    -webkit-mask-image: radial-gradient(1000px 700px at 50% 50%, #000 18%, transparent 76%);
+  }
+
+  .mark {
+    position: relative;
+    width: 66px;
+    height: 66px;
+    display: grid;
+    place-items: center;
+    border: 1.5px solid rgba(232, 163, 38, 0.45);
+    border-radius: 14px;
+    color: #e8a326;
+    background: rgba(232, 163, 38, 0.08);
+    opacity: 0;
+    animation: riseIn 700ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .rule {
+    position: relative;
+    width: 76px;
+    height: 4px;
+    border-radius: 4px;
+    background: #e8a326;
+    margin: 40px 0 38px;
+    transform-origin: center;
+    animation: ruleIn 700ms 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  h1 {
+    position: relative;
+    max-width: 1280px;
+    text-align: center;
+    font-size: 76px;
+    line-height: 1.14;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    opacity: 0;
+    animation: riseIn 800ms 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  h1 em { font-style: normal; color: #e8a326; }
+
+  .sub {
+    position: relative;
+    margin-top: 34px;
+    font-family: "DM Mono", monospace;
+    font-size: 14px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: #9db7a6;
+    opacity: 0;
+    animation: riseIn 800ms 540ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .foot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 74px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    font-family: "DM Mono", monospace;
+    font-size: 13px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(220, 230, 215, 0.5);
+    opacity: 0;
+    animation: riseIn 800ms 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .foot .dot { color: #e8a326; }
+
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes ruleIn {
+    from { opacity: 0; transform: scaleX(0); }
+    to { opacity: 1; transform: scaleX(1); }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="grid"></div>
+
+    <div class="mark">
+      <svg width="34" height="34" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <rect x="7" y="12" width="34" height="24" rx="2.5" stroke="currentColor" stroke-width="2.2" />
+        <path d="M14 7.5v4.5M34 7.5v4.5M18 41l6-6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+        <path d="M14 20h20M14 26h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+      </svg>
+    </div>
+
+    <div class="rule"></div>
+
+    <h1>Every number traced back to <em>the work that produced it.</em></h1>
+
+    <div class="sub">ZD REKLAMA · Signage Production OS</div>
+
+    <div class="foot"><span class="dot">●</span>&nbsp; One platform for money, orders, stock and crew</div>
+  </div>
+</body>
+</html>
