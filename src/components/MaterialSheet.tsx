@@ -7,6 +7,7 @@ import { formatMoney } from "../lib/format";
 import { invalidateData } from "../lib/invalidate";
 import { Sheet } from "../components/Sheet";
 import { useToast } from "../components/ToastProvider";
+import { t } from "../i18n";
 
 const categories = ["Vinyl", "Banner", "Ink", "Electrical", "Hardware", "Substrate", "Consumables", "Other"];
 const units = ["sqm", "roll", "litre", "pcs", "set", "sheet", "m", "kg"];
@@ -64,7 +65,10 @@ export function MaterialSheet({ open, onClose, material }: MaterialSheetProps) {
     },
     onSuccess: () => {
       invalidateData(queryClient);
-      toast.success(material ? "Material updated" : "Material added", `${form.name} is now tracked in inventory.`);
+      toast.success(
+        material ? t("Material updated") : t("Material added"),
+        t("{name} is now tracked in inventory.", { name: form.name })
+      );
       onClose();
     },
     onError: (mutationError: Error) => setError(mutationError.message),
@@ -73,8 +77,8 @@ export function MaterialSheet({ open, onClose, material }: MaterialSheetProps) {
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (!form.name.trim()) return setError("Give the material a name.");
-    if (!form.unit.trim()) return setError("Choose a unit of measure.");
+    if (!form.name.trim()) return setError(t("Give the material a name."));
+    if (!form.unit.trim()) return setError(t("Choose a unit of measure."));
     mutation.mutate();
   };
 
@@ -82,16 +86,16 @@ export function MaterialSheet({ open, onClose, material }: MaterialSheetProps) {
     <Sheet
       open={open}
       onClose={onClose}
-      title={material ? "Edit material" : "New material"}
-      subtitle={material ? "Update the reorder level, cost or supplier." : "Add something the production team needs to track."}
+      title={material ? t("Edit material") : t("New material")}
+      subtitle={material ? t("Update the reorder level, cost or supplier.") : t("Add something the production team needs to track.")}
       footer={
         <>
           <button type="button" className="btn btn-ghost" onClick={onClose} disabled={mutation.isPending}>
-            Cancel
+            {t("Cancel")}
           </button>
           <div className="sheet-footer-actions">
             <button form="material-form" type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving…" : material ? "Save changes" : "Add material"}
+              {mutation.isPending ? t("Saving…") : material ? t("Save changes") : t("Add material")}
             </button>
           </div>
         </>
@@ -100,12 +104,12 @@ export function MaterialSheet({ open, onClose, material }: MaterialSheetProps) {
       <form id="material-form" className="form-grid" onSubmit={submit}>
         <div className="field">
           <label className="field-label" htmlFor="material-name">
-            Material name
+            {t("Material name")}
           </label>
           <input
             id="material-name"
             className="input"
-            placeholder="e.g. Cast vinyl — 1.27m × 50m"
+            placeholder={t("e.g. Cast vinyl — 1.27m × 50m")}
             value={form.name}
             onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
             autoFocus
@@ -115,7 +119,7 @@ export function MaterialSheet({ open, onClose, material }: MaterialSheetProps) {
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="material-category">
-              Category
+              {t("Category")}
             </label>
             <select
               id="material-category"
@@ -124,13 +128,15 @@ export function MaterialSheet({ open, onClose, material }: MaterialSheetProps) {
               onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))}
             >
               {categories.map((category) => (
-                <option key={category}>{category}</option>
+                <option key={category} value={category}>
+                  {t(category)}
+                </option>
               ))}
             </select>
           </div>
           <div className="field">
             <label className="field-label" htmlFor="material-unit">
-              Unit
+              {t("Unit")}
             </label>
             <select
               id="material-unit"
@@ -139,7 +145,9 @@ export function MaterialSheet({ open, onClose, material }: MaterialSheetProps) {
               onChange={(event) => setForm((current) => ({ ...current, unit: event.target.value }))}
             >
               {units.map((unit) => (
-                <option key={unit}>{unit}</option>
+                <option key={unit} value={unit}>
+                  {t(unit)}
+                </option>
               ))}
             </select>
           </div>
@@ -148,7 +156,7 @@ export function MaterialSheet({ open, onClose, material }: MaterialSheetProps) {
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="material-stock">
-              {material ? "Current stock" : "Opening stock"}
+              {material ? t("Current stock") : t("Opening stock")}
             </label>
             <input
               id="material-stock"
@@ -159,11 +167,11 @@ export function MaterialSheet({ open, onClose, material }: MaterialSheetProps) {
               onChange={(event) => setForm((current) => ({ ...current, stock: event.target.value.replace(/[^\d.]/g, "") }))}
               disabled={Boolean(material)}
             />
-            {material && <span className="field-hint">Adjust stock through a receive or usage movement.</span>}
+            {material && <span className="field-hint">{t("Adjust stock through a receive or usage movement.")}</span>}
           </div>
           <div className="field">
             <label className="field-label" htmlFor="material-min">
-              Reorder level
+              {t("Reorder level")}
             </label>
             <input
               id="material-min"
@@ -178,7 +186,7 @@ export function MaterialSheet({ open, onClose, material }: MaterialSheetProps) {
 
         <div className="field">
           <label className="field-label" htmlFor="material-cost">
-            Unit cost
+            {t("Unit cost")}
           </label>
           <input
             id="material-cost"
@@ -189,31 +197,33 @@ export function MaterialSheet({ open, onClose, material }: MaterialSheetProps) {
             onChange={(event) => setForm((current) => ({ ...current, unitCost: event.target.value.replace(/[^\d]/g, "") }))}
           />
           <span className="field-hint">
-            {form.unitCost ? `${formatMoney(Number(form.unitCost))} per ${form.unit}` : "Used to value stock and cost usage."}
+            {form.unitCost
+              ? t("{price} per {unit}", { price: formatMoney(Number(form.unitCost)), unit: t(form.unit) })
+              : t("Used to value stock and cost usage.")}
           </span>
         </div>
 
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="material-supplier">
-              Supplier
+              {t("Supplier")}
             </label>
             <input
               id="material-supplier"
               className="input"
-              placeholder="e.g. Uzprint Materials"
+              placeholder={t("e.g. Uzprint Materials")}
               value={form.supplier}
               onChange={(event) => setForm((current) => ({ ...current, supplier: event.target.value }))}
             />
           </div>
           <div className="field">
             <label className="field-label" htmlFor="material-location">
-              Storage location
+              {t("Storage location")}
             </label>
             <input
               id="material-location"
               className="input"
-              placeholder="e.g. Warehouse A"
+              placeholder={t("e.g. Warehouse A")}
               value={form.location}
               onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))}
             />
@@ -235,7 +245,7 @@ export function MaterialSheet({ open, onClose, material }: MaterialSheetProps) {
           }}
         >
           <Info size={13} style={{ flexShrink: 0 }} />
-          Every stock movement updates this item instantly and appears in the order material log.
+          {t("Every stock movement updates this item instantly and appears in the order material log.")}
         </div>
       </form>
     </Sheet>

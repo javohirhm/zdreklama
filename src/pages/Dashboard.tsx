@@ -34,13 +34,16 @@ import { EmptyState } from "../components/EmptyState";
 import {
   formatCompact,
   formatDate,
-  formatDateRange,
   formatMoney,
   formatNumber,
   initials,
+  monthKey,
+  monthName,
+  monthShort,
   signedPercent,
   statusLabel,
 } from "../lib/format";
+import { t } from "../i18n";
 
 const mixColors = ["#1e503a", "#e8a326", "#c86242", "#527389", "#8da58f", "#cdbb91", "#9a8b78"];
 
@@ -85,9 +88,9 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
               className="legend-dot"
               style={{ background: entry.dataKey === "income" ? "#79b994" : "#e8a326" }}
             />
-            {entry.dataKey === "income" ? "Money in" : "Money out"}
+            {entry.dataKey === "income" ? t("Money in") : t("Money out")}
           </span>
-          <strong>UZS {formatCompact(entry.value)}</strong>
+          <strong>{formatCompact(entry.value)} {t("UZS")}</strong>
         </div>
       ))}
     </div>
@@ -143,11 +146,11 @@ export function DashboardPage() {
       <div className="card" style={{ marginTop: 30 }}>
         <EmptyState
           icon={<Wallet size={20} />}
-          title="Could not load the dashboard"
-          description="The API could not be reached. Check that the server is running, then try again."
+          title={t("Could not load the dashboard")}
+          description={t("The API could not be reached. Check that the server is running, then try again.")}
           action={
             <button className="btn btn-primary" onClick={() => void refetch()}>
-              Try again
+              {t("Try again")}
             </button>
           }
         />
@@ -158,6 +161,9 @@ export function DashboardPage() {
   const { stats, chart, expenseMix, recentTransactions, openOrders, lowStock, crew } = data;
   const averageNet = chart.reduce((sum, month) => sum + month.income - month.expense, 0) / chart.length;
   const totalMix = expenseMix.reduce((sum, item) => sum + item.value, 0);
+  const monthTitle = monthKey(data.month);
+  const monthOnly = monthName(Number(data.month.split("-")[1]) - 1);
+  const chartData = chart.map((point) => ({ ...point, label: monthShort(point.key).split(" ")[0] }));
 
   const normalizedMix =
     expenseMix.length <= 6
@@ -175,21 +181,21 @@ export function DashboardPage() {
       <header className="page-header animate-up">
         <div>
           <div className="eyebrow">
-            Financial overview <span style={{ color: "var(--color-line-strong)" }}>/</span> {data.monthLabel}
+            {t("Financial overview")} <span style={{ color: "var(--color-line-strong)" }}>/</span> {monthTitle}
           </div>
           <h1 className="page-title">
-            The shop floor, <em>in control.</em>
+            {t("The shop floor,")} <em>{t("in control.")}</em>
           </h1>
           <p className="page-subtitle">
-            Cash, orders, materials and crew — every signage job from design to install, for {data.monthLabel.split(" ")[0]}.
+            {t("Cash, orders, materials and crew — every signage job from design to install, for {month}.", { month: monthOnly })}
           </p>
         </div>
         <div className="header-actions">
           <Link to="/money" className="btn btn-secondary">
-            View ledger <ArrowUpRight size={14} />
+            {t("View ledger")} <ArrowUpRight size={14} />
           </Link>
           <button type="button" className="btn btn-amber" onClick={() => openTransaction()}>
-            <Plus size={15} /> New entry
+            <Plus size={15} /> {t("New entry")}
           </button>
         </div>
       </header>
@@ -197,14 +203,14 @@ export function DashboardPage() {
       <section className="kpi-grid animate-up" style={{ animationDelay: "50ms" }}>
         <article className="kpi-card kpi-dark">
           <div className="kpi-head">
-            <span className="kpi-label">Money in</span>
+            <span className="kpi-label">{t("Money in")}</span>
             <span className="kpi-icon">
               <ArrowDownLeft />
             </span>
           </div>
           <div className="kpi-value">
             <strong>{formatCompact(stats.income)}</strong>
-            <span>UZS</span>
+            <span>{t("UZS")}</span>
           </div>
           <div className="kpi-foot">
             <div>
@@ -212,7 +218,7 @@ export function DashboardPage() {
                 {stats.incomeChange !== null && stats.incomeChange >= 0 ? <TrendingUp /> : <TrendingDown />}
                 {signedPercent(stats.incomeChange)}
               </div>
-              <div className="kpi-note">vs. last month</div>
+              <div className="kpi-note">{t("vs. last month")}</div>
             </div>
             <Sparkline values={chart.map((month) => month.income)} />
           </div>
@@ -220,14 +226,14 @@ export function DashboardPage() {
 
         <article className="kpi-card">
           <div className="kpi-head">
-            <span className="kpi-label">Money out</span>
+            <span className="kpi-label">{t("Money out")}</span>
             <span className="kpi-icon">
               <ArrowUpRight />
             </span>
           </div>
           <div className="kpi-value">
             <strong>{formatCompact(stats.expense)}</strong>
-            <span>UZS</span>
+            <span>{t("UZS")}</span>
           </div>
           <div className="kpi-foot">
             <div>
@@ -235,7 +241,7 @@ export function DashboardPage() {
                 {stats.expenseChange !== null && stats.expenseChange <= 0 ? <TrendingDown /> : <TrendingUp />}
                 {signedPercent(stats.expenseChange)}
               </div>
-              <div className="kpi-note">vs. last month</div>
+              <div className="kpi-note">{t("vs. last month")}</div>
             </div>
             <Sparkline values={chart.map((month) => month.expense)} color="#c86242" />
           </div>
@@ -243,17 +249,17 @@ export function DashboardPage() {
 
         <article className="kpi-card kpi-sage">
           <div className="kpi-head">
-            <span className="kpi-label">Net profit</span>
+            <span className="kpi-label">{t("Net profit")}</span>
             <span className="kpi-icon">
               <CircleDollarSign />
             </span>
           </div>
           <div className="kpi-value">
             <strong>{formatCompact(stats.profit)}</strong>
-            <span>UZS</span>
+            <span>{t("UZS")}</span>
           </div>
           <div className="kpi-foot">
-            <span className="trend-chip">{stats.margin.toFixed(1)}% margin</span>
+            <span className="trend-chip">{t("{pct}% margin", { pct: stats.margin.toFixed(1) })}</span>
             <div className={`trend ${stats.profitChange !== null && stats.profitChange >= 0 ? "trend-up" : "trend-down"}`}>
               {stats.profitChange !== null && stats.profitChange >= 0 ? <TrendingUp /> : <TrendingDown />}
               {signedPercent(stats.profitChange)}
@@ -263,22 +269,22 @@ export function DashboardPage() {
 
         <article className="kpi-card kpi-warm">
           <div className="kpi-head">
-            <span className="kpi-label">Stock on hand</span>
+            <span className="kpi-label">{t("Stock on hand")}</span>
             <span className="kpi-icon">
               <Boxes />
             </span>
           </div>
           <div className="kpi-value">
             <strong>{formatCompact(stats.inventoryValue)}</strong>
-            <span>UZS</span>
+            <span>{t("UZS")}</span>
           </div>
           <div className="kpi-foot">
             <div>
               <div className="trend trend-down">
                 <Boxes />
-                {stats.lowStockCount} low of {stats.inventoryItems}
+                {t("{low} low of {total}", { low: stats.lowStockCount, total: stats.inventoryItems })}
               </div>
-              <div className="kpi-note">{formatCompact(stats.consumedThisMonth)} used this month</div>
+              <div className="kpi-note">{t("{amount} used this month", { amount: formatCompact(stats.consumedThisMonth) })}</div>
             </div>
             <div className="stock-mini" aria-hidden="true">
               {[9, 16, 12, 20, 14, 22, 10].map((height, index) => (
@@ -293,21 +299,21 @@ export function DashboardPage() {
         <section className="card chart-card span-8 animate-up" style={{ animationDelay: "100ms" }}>
           <div className="card-header">
             <div>
-              <h2 className="card-title">Cash flow</h2>
-              <div className="card-subtitle">Money in and out across the last six months</div>
+              <h2 className="card-title">{t("Cash flow")}</h2>
+              <div className="card-subtitle">{t("Money in and out across the last six months")}</div>
             </div>
             <div className="chart-legend" style={{ padding: 0, margin: 0 }}>
               <span className="legend-item">
-                <span className="legend-dot" style={{ background: "#2f6b4f" }} /> Money in
+                <span className="legend-dot" style={{ background: "#2f6b4f" }} /> {t("Money in")}
               </span>
               <span className="legend-item">
-                <span className="legend-dot" style={{ background: "#e8a326" }} /> Money out
+                <span className="legend-dot" style={{ background: "#e8a326" }} /> {t("Money out")}
               </span>
             </div>
           </div>
           <div className="chart-body">
             <ResponsiveContainer width="100%" height={270}>
-              <AreaChart data={chart} margin={{ top: 18, right: 17, left: -10, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 18, right: 17, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#2f6b4f" stopOpacity={0.23} />
@@ -355,10 +361,10 @@ export function DashboardPage() {
           </div>
           <div className="chart-footer">
             <div className="chart-footer-copy">
-              Average monthly net <strong>UZS {formatCompact(averageNet)}</strong>
+              {t("Average monthly net")} <strong>{formatCompact(averageNet)} {t("UZS")}</strong>
             </div>
             <Link to="/money" className="card-link">
-              Open full ledger <ArrowRight size={12} />
+              {t("Open full ledger")} <ArrowRight size={12} />
             </Link>
           </div>
         </section>
@@ -366,8 +372,8 @@ export function DashboardPage() {
         <section className="card expense-mix span-4 animate-up" style={{ animationDelay: "150ms" }}>
           <div className="card-header">
             <div>
-              <h2 className="card-title">Where it went</h2>
-              <div className="card-subtitle">Expense mix · {data.monthLabel.split(" ")[0]}</div>
+              <h2 className="card-title">{t("Where it went")}</h2>
+              <div className="card-subtitle">{t("Expense mix")} · {monthOnly}</div>
             </div>
             <Link to="/money" className="card-link">
               <ArrowUpRight size={12} />
@@ -395,7 +401,7 @@ export function DashboardPage() {
               </PieChart>
             </ResponsiveContainer>
             <div className="donut-center">
-              <span>Total out</span>
+              <span>{t("Total out")}</span>
               <strong>{formatCompact(stats.expense)}</strong>
             </div>
           </div>
@@ -403,7 +409,7 @@ export function DashboardPage() {
             {normalizedMix.slice(0, 6).map((item, index) => (
               <div className="mix-row" key={item.name}>
                 <span className="mix-row-dot" style={{ background: mixColors[index % mixColors.length] }} />
-                <span className="mix-row-name">{item.name}</span>
+                <span className="mix-row-name">{t(item.name)}</span>
                 <span className="mix-row-value">{formatCompact(item.value)}</span>
                 <span className="mix-row-pct">{totalMix ? Math.round((item.value / totalMix) * 100) : 0}%</span>
               </div>
@@ -414,13 +420,17 @@ export function DashboardPage() {
         <section className="card span-5 animate-up" style={{ animationDelay: "200ms" }}>
           <div className="card-header">
             <div>
-              <h2 className="card-title">Orders in motion</h2>
+              <h2 className="card-title">{t("Orders in motion")}</h2>
               <div className="card-subtitle">
-                {stats.openOrders} open · {stats.inProduction} in production · {stats.awaitingInstall} ready to install
+                {t("{open} open · {production} in production · {install} ready to install", {
+                  open: stats.openOrders,
+                  production: stats.inProduction,
+                  install: stats.awaitingInstall,
+                })}
               </div>
             </div>
             <Link to="/orders" className="card-link">
-              All orders <ArrowRight size={12} />
+              {t("All orders")} <ArrowRight size={12} />
             </Link>
           </div>
           <div className="order-list">
@@ -432,12 +442,12 @@ export function DashboardPage() {
                   <span className="order-info">
                     <span className="order-name">{order.name}</span>
                     <span className="order-meta">
-                      {order.clientName} · {order.product}
+                      {order.clientName} · {t(order.product)}
                     </span>
                   </span>
                   <span className="order-money">
-                    <strong>UZS {formatCompact(order.quote)}</strong>
-                    <span>{order.balance > 0 ? `${formatCompact(order.balance)} due` : "Paid in full"}</span>
+                    <strong>{formatCompact(order.quote)} {t("UZS")}</strong>
+                    <span>{order.balance > 0 ? t("{amount} due", { amount: formatCompact(order.balance) }) : t("Paid in full")}</span>
                   </span>
                   <span className="order-progress">
                     <span className="progress-track">
@@ -454,11 +464,11 @@ export function DashboardPage() {
         <section className="card span-7 animate-up" style={{ animationDelay: "250ms" }}>
           <div className="card-header">
             <div>
-              <h2 className="card-title">Recent entries</h2>
-              <div className="card-subtitle">The latest movement across the ledger</div>
+              <h2 className="card-title">{t("Recent entries")}</h2>
+              <div className="card-subtitle">{t("The latest movement across the ledger")}</div>
             </div>
             <Link to="/money" className="card-link">
-              View all <ArrowRight size={12} />
+              {t("View all")} <ArrowRight size={12} />
             </Link>
           </div>
           <div className="recent-list">
@@ -470,7 +480,7 @@ export function DashboardPage() {
                 <span className="recent-main">
                   <span className="recent-title">{transaction.description}</span>
                   <span className="recent-meta">
-                    {transaction.category} · {formatDate(transaction.date, "short")}
+                    {t(transaction.category)} · {formatDate(transaction.date, "short")}
                   </span>
                 </span>
                 <span className={`recent-amount ${transaction.type === "income" ? "in" : "out"}`}>
@@ -485,11 +495,11 @@ export function DashboardPage() {
         <section className="card span-7 animate-up" style={{ animationDelay: "300ms" }}>
           <div className="card-header">
             <div>
-              <h2 className="card-title">Stock watch</h2>
-              <div className="card-subtitle">Materials below their reorder level</div>
+              <h2 className="card-title">{t("Stock watch")}</h2>
+              <div className="card-subtitle">{t("Materials below their reorder level")}</div>
             </div>
             <Link to="/materials" className="card-link">
-              Open inventory <ArrowRight size={12} />
+              {t("Open inventory")} <ArrowRight size={12} />
             </Link>
           </div>
           {lowStock.length ? (
@@ -504,24 +514,24 @@ export function DashboardPage() {
                   >
                     <span>
                       <span className="stock-watch-name">{material.name}</span>
-                      <span className="stock-watch-sub">{material.category} · {material.supplier || "No supplier set"}</span>
+                      <span className="stock-watch-sub">{t(material.category)} · {material.supplier || t("No supplier set")}</span>
                     </span>
                     <span className="stock-watch-level">
                       <span className="progress-track">
                         <span className={`progress-fill ${ratio < 50 ? "danger" : "warn"}`} style={{ width: `${ratio}%` }} />
                       </span>
                       <span className="stock-watch-qty">
-                        {formatNumber(material.stock, 1)} / {formatNumber(material.minStock, 1)} {material.unit}
+                        {formatNumber(material.stock, 1)} / {formatNumber(material.minStock, 1)} {t(material.unit)}
                       </span>
                     </span>
-                    <span className="badge badge-low">Low</span>
+                    <span className="badge badge-low">{t("Low stock")}</span>
                   </Link>
                 );
               })}
             </div>
           ) : (
             <div style={{ padding: "22px 23px", fontSize: 11, color: "var(--color-muted)" }}>
-              All stock levels are healthy.
+              {t("All stock levels are healthy.")}
             </div>
           )}
         </section>
@@ -529,11 +539,13 @@ export function DashboardPage() {
         <section className="card span-5 animate-up" style={{ animationDelay: "350ms" }}>
           <div className="card-header">
             <div>
-              <h2 className="card-title">The crew</h2>
-              <div className="card-subtitle">{stats.teamActive} active · {stats.teamOnLeave} on leave</div>
+              <h2 className="card-title">{t("The crew")}</h2>
+              <div className="card-subtitle">
+                {t("{active} active · {leave} on leave", { active: stats.teamActive, leave: stats.teamOnLeave })}
+              </div>
             </div>
             <Link to="/team" className="card-link">
-              All people <ArrowRight size={12} />
+              {t("All people")} <ArrowRight size={12} />
             </Link>
           </div>
           <div className="crew-list">
@@ -542,11 +554,11 @@ export function DashboardPage() {
                 <Avatar name={worker.name} color={worker.avatarColor} size={31} />
                 <span className="crew-main">
                   <span className="crew-name">{worker.name}</span>
-                  <span className="crew-role">{worker.role}</span>
+                  <span className="crew-role">{t(worker.role)}</span>
                 </span>
                 <span className="crew-orders">
                   <strong>{worker.activeOrders}</strong>
-                  <span>orders</span>
+                  <span>{t("orders")}</span>
                 </span>
               </Link>
             ))}
@@ -558,7 +570,7 @@ export function DashboardPage() {
               <span style={{ display: "grid", width: 31, height: 31, placeItems: "center", border: "1px solid var(--color-line)", borderRadius: "50%" }}>
                 <Plus size={13} />
               </span>
-              <span className="crew-main">Manage the team</span>
+              <span className="crew-main">{t("Manage the team")}</span>
               <ChevronRight size={13} />
             </Link>
           </div>
@@ -583,10 +595,14 @@ export function DashboardPage() {
       >
         <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
           <CalendarDays size={13} />
-          Reporting period: {formatDateRange(`${data.month}-01`, null).replace("From ", "")} · {stats.materialUsageCount} material movements · payroll of UZS {formatCompact(stats.monthlyPayroll)}
+          {t("Reporting period: {period} · {count} material movements · payroll of {amount}", {
+            period: monthTitle,
+            count: stats.materialUsageCount,
+            amount: `${formatCompact(stats.monthlyPayroll)} ${t("UZS")}`,
+          })}
         </span>
         <Link to="/orders" className="card-link">
-          <FolderKanban size={12} /> Review the production board <ArrowRight size={12} />
+          <FolderKanban size={12} /> {t("Review the production board")} <ArrowRight size={12} />
         </Link>
       </div>
     </div>

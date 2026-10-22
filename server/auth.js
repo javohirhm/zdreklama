@@ -105,13 +105,58 @@ function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
-function loginPage(error = "", username = "") {
+const LOGIN_TEXT = {
+  uz: {
+    title: "Kirish",
+    subtitle: "Ish paneliga kirish",
+    username: "Login",
+    password: "Parol",
+    submit: "Kirish",
+    wrong: "Login yoki parol noto'g'ri.",
+    locked: "Urinishlar juda ko'p. 15 daqiqadan so'ng qayta urinib ko'ring.",
+  },
+  ru: {
+    title: "Вход",
+    subtitle: "Вход в рабочую панель",
+    username: "Логин",
+    password: "Пароль",
+    submit: "Войти",
+    wrong: "Неверный логин или пароль.",
+    locked: "Слишком много попыток. Попробуйте через 15 минут.",
+  },
+  en: {
+    title: "Sign in",
+    subtitle: "Sign in to the operations dashboard",
+    username: "Username",
+    password: "Password",
+    submit: "Sign in",
+    wrong: "Wrong username or password.",
+    locked: "Too many attempts. Try again in 15 minutes.",
+  },
+};
+const LANG_COOKIE = "zd_lang";
+
+function requestLang(req) {
+  const match = (req.headers.cookie || "").match(/(?:^|;\s*)zd_lang=(uz|ru|en)/);
+  return match?.[1] || "uz";
+}
+
+function loginPage(lang, errorKey = "", username = "") {
+  const text = LOGIN_TEXT[lang];
+  const error = errorKey ? text[errorKey] : "";
+  const switcher = ["uz", "ru", "en"]
+    .map((code) =>
+      code === lang
+        ? `<span class="on">${code.toUpperCase()}</span>`
+        : `<a href="/login?lang=${code}">${code.toUpperCase()}</a>`,
+    )
+    .join("");
   return `<!doctype html>
-<html lang="en">
+<html lang="${lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sign in · ZD REKLAMA</title>
+<title>${text.title} · ZD REKLAMA</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
   * { box-sizing: border-box; }
@@ -127,6 +172,10 @@ function loginPage(error = "", username = "") {
   input:focus { outline: 2px solid #d98a4e; outline-offset: 1px; }
   button { width: 100%; padding: 11px; border: 0; border-radius: 9px; font: inherit; font-weight: 700;
     background: #d98a4e; color: #14171a; cursor: pointer; }
+  .langs { display: flex; justify-content: center; gap: 4px; margin-top: 18px; font-size: 12px; font-weight: 700; }
+  .langs a, .langs span { padding: 4px 8px; border-radius: 6px; color: rgba(238,240,231,.55); text-decoration: none; }
+  .langs a:hover { color: #eef0e7; }
+  .langs .on { background: rgba(217,138,78,.18); color: #d98a4e; }
   .error { background: rgba(220,80,70,.14); color: #f0a49c; border-radius: 8px; padding: 9px 12px;
     font-size: 13px; margin: 0 0 16px; }
 </style>
@@ -134,13 +183,14 @@ function loginPage(error = "", username = "") {
 <body>
 <form method="post" action="/login">
   <h1>ZD REKLAMA</h1>
-  <p>Sign in to the operations dashboard</p>
+  <p>${text.subtitle}</p>
   ${error ? `<div class="error">${escapeHtml(error)}</div>` : ""}
-  <label for="username">Username</label>
+  <label for="username">${text.username}</label>
   <input id="username" name="username" autocomplete="username" required autofocus value="${escapeHtml(username)}">
-  <label for="password">Password</label>
+  <label for="password">${text.password}</label>
   <input id="password" name="password" type="password" autocomplete="current-password" required>
-  <button type="submit">Sign in</button>
+  <button type="submit">${text.submit}</button>
+  <div class="langs">${switcher}</div>
 </form>
 </body>
 </html>`;
@@ -153,8 +203,12 @@ export function installAuth(app, express) {
   app.use(express.urlencoded({ extended: false, limit: "10kb" }));
 
   app.get("/login", (req, res) => {
+    const chosen = ["uz", "ru", "en"].includes(req.query.lang) ? req.query.lang : null;
+    if (chosen) {
+      res.setHeader("Set-Cookie", `${LANG_COOKIE}=${chosen}; Path=/; Max-Age=${365 * 86400}; SameSite=Lax`);
+    }
     if (readSession(req)) return res.redirect("/");
-    res.type("html").send(loginPage());
+    res.type("html").send(loginPage(chosen || requestLang(req)));
   });
 
   app.post("/login", (req, res) => {
@@ -162,11 +216,11 @@ export function installAuth(app, express) {
     const username = String(req.body?.username || "").trim();
     const password = String(req.body?.password || "");
     if (tooManyFailures(ip)) {
-      return res.status(429).type("html").send(loginPage("Too many attempts. Try again in 15 minutes.", username));
+      return res.status(429).type("html").send(loginPage(requestLang(req), "locked", username));
     }
     if (!username || !password || !checkPassword(username, password)) {
       recordFailure(ip);
-      return res.status(401).type("html").send(loginPage("Wrong username or password.", username));
+      return res.status(401).type("html").send(loginPage(requestLang(req), "wrong", username));
     }
     failures.delete(ip);
     res.setHeader("Set-Cookie", cookieHeader(makeToken(username), SESSION_DAYS * 86400));

@@ -13,6 +13,20 @@ import type {
   Worker,
   WorkerDetail,
 } from "./types";
+import { t } from "./i18n";
+
+// The API answers in English; show its messages in the chosen language.
+function translateError(message: string): string {
+  const direct = t(message);
+  if (direct !== message) return direct;
+  let m = message.match(/^(.+) is required\.$/);
+  if (m) return t("{label} is required.", { label: t(m[1]) });
+  m = message.match(/^(.+) not found\.$/);
+  if (m) return t("{label} not found.", { label: t(m[1]) });
+  m = message.match(/^Only (\S+) (\S+) in stock\.$/);
+  if (m) return t("Only {qty} {unit} in stock.", { qty: m[1], unit: t(m[2]) });
+  return message;
+}
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
@@ -24,11 +38,11 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   });
   if (response.status === 401) {
     window.location.href = "/login";
-    throw new Error("Please sign in again.");
+    throw new Error(t("Please sign in again."));
   }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.error || "Request failed. Please try again.");
+    throw new Error(translateError(data.error || "Request failed. Please try again."));
   }
   return data as T;
 }

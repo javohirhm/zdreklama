@@ -9,6 +9,7 @@ import { ClientSheet } from "../components/ClientSheet";
 import { ClientDrawer } from "../components/ClientDrawer";
 import { EmptyState } from "../components/EmptyState";
 import { formatCompact, formatDate, initials } from "../lib/format";
+import { plural, t } from "../i18n";
 
 export function ClientsPage() {
   const [params, setParams] = useSearchParams();
@@ -73,50 +74,56 @@ export function ClientsPage() {
       <PageHeader
         eyebrow={
           <>
-            Commercial <span style={{ color: "var(--color-line-strong)" }}>/</span> Clients
+            {t("Commercial")} <span style={{ color: "var(--color-line-strong)" }}>/</span> {t("Clients")}
           </>
         }
         title={
           <>
-            The brands <em>we build for.</em>
+            {t("The brands")} <em>{t("we build for.")}</em>
           </>
         }
-        subtitle="A single account view for every brand we produce for — contacts, order history, billed revenue and the crew behind the relationship."
+        subtitle={t("A single account view for every brand we produce for — contacts, order history, billed revenue and the crew behind the relationship.")}
         actions={
           <button type="button" className="btn btn-amber" onClick={createNew}>
-            <Plus size={15} /> Add client
+            <Plus size={15} /> {t("Add client")}
           </button>
         }
       />
 
       <section className="summary-strip animate-up" style={{ animationDelay: "50ms" }}>
         <div className="summary-block">
-          <span className="micro-label">Client portfolio</span>
+          <span className="micro-label">{t("Client portfolio")}</span>
           <strong>
-            {clients.length} <span>BRANDS</span>
+            {clients.length} <span>{t("BRANDS")}</span>
           </strong>
-          <div className="summary-note">{industries.length} industries represented</div>
+          <div className="summary-note">
+            {plural(industries.length, {
+              en: ["{n} industry represented", "{n} industries represented"],
+              ru: ["{n} отрасль", "{n} отрасли", "{n} отраслей"],
+              uz: "{n} ta soha",
+            })}
+          </div>
         </div>
         <div className="summary-block">
-          <span className="micro-label">Active accounts</span>
+          <span className="micro-label">{t("Active accounts")}</span>
           <strong>
-            {stats.active} <span>LIVE</span>
+            {stats.active} <span>{t("LIVE")}</span>
           </strong>
-          <div className="summary-note">Brands with live production orders</div>
+          <div className="summary-note">{t("Brands with live production orders")}</div>
         </div>
         <div className="summary-block">
-          <span className="micro-label">Lifetime billed</span>
+          <span className="micro-label">{t("Lifetime billed")}</span>
           <strong>
-            {formatCompact(stats.revenue)} <span>UZS</span>
+            {formatCompact(stats.revenue)} <span>{t("UZS")}</span>
           </strong>
-          <div className="summary-note">All client income recorded</div>
+          <div className="summary-note">{t("All client income recorded")}</div>
         </div>
         <div className="summary-block">
-          <span className="micro-label">Average account</span>
+          <span className="micro-label">{t("Average account")}</span>
           <strong>
-            {formatCompact(stats.average)} <span>UZS</span>
+            {formatCompact(stats.average)} <span>{t("UZS")}</span>
           </strong>
-          <div className="summary-note">Revenue per client</div>
+          <div className="summary-note">{t("Revenue per client")}</div>
         </div>
       </section>
 
@@ -129,20 +136,26 @@ export function ClientsPage() {
           <input
             className="input"
             style={{ height: 38, paddingLeft: 33, fontSize: 11 }}
-            placeholder="Search brand, industry or contact…"
+            placeholder={t("Search brand, industry or contact…")}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            aria-label="Search clients"
+            aria-label={t("Search clients")}
           />
         </div>
         <select className="select" style={{ width: "auto", height: 38, fontSize: 10.5 }} value={industry} onChange={(event) => setIndustry(event.target.value)}>
-          <option value="all">All industries</option>
+          <option value="all">{t("All industries")}</option>
           {industries.map((item) => (
-            <option key={item}>{item}</option>
+            <option key={item} value={item}>
+              {t(item)}
+            </option>
           ))}
         </select>
         <span className="mono" style={{ fontSize: 8.5, color: "var(--color-muted)", marginLeft: "auto" }}>
-          {filtered.length} clients
+          {plural(filtered.length, {
+            en: ["{n} client", "{n} clients"],
+            ru: ["{n} клиент", "{n} клиента", "{n} клиентов"],
+            uz: "{n} ta mijoz",
+          })}
         </span>
       </div>
 
@@ -161,11 +174,11 @@ export function ClientsPage() {
         <div className="card">
           <EmptyState
             icon={<Building2 size={21} />}
-            title="No clients in this view"
-            description="Clear the filters or add a new brand to the portfolio."
+            title={t("No clients in this view")}
+            description={t("Clear the filters or add a new brand to the portfolio.")}
             action={
               <button type="button" className="btn btn-primary" onClick={createNew}>
-                <Plus size={14} /> Add client
+                <Plus size={14} /> {t("Add client")}
               </button>
             }
           />
@@ -192,30 +205,30 @@ export function ClientsPage() {
                   <span className="client-monogram">{initials(client.name)}</span>
                   <span className={`badge ${client.activeOrders ? "badge-active" : "badge-neutral"}`}>
                     <span className="status-dot" />
-                    {client.activeOrders ? `${client.activeOrders} active` : "Inactive"}
+                    {client.activeOrders ? t("{n} active", { n: client.activeOrders }) : t("Inactive")}
                   </span>
                 </div>
 
                 <h3 className="client-name">{client.name}</h3>
-                <div className="client-industry">{client.industry || "Industry not set"}</div>
+                <div className="client-industry">{client.industry ? t(client.industry) : t("Industry not set")}</div>
 
                 <div className="client-contact">
-                  <strong>{client.contactName || "No main contact"}</strong>
-                  {client.email || client.phone || "No contact details"}
+                  <strong>{client.contactName || t("No main contact")}</strong>
+                  {client.email || client.phone || t("No contact details")}
                 </div>
 
                 <div className="client-finance">
                   <div>
-                    <span>Billed</span>
+                    <span>{t("Billed")}</span>
                     <strong>{formatCompact(client.revenue)}</strong>
                   </div>
                   <div style={{ textAlign: "center" }}>
-                    <span>Orders</span>
+                    <span>{t("Orders")}</span>
                     <strong>{client.orderCount}</strong>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <span>Last payment</span>
-                    <strong>{formatDate(client.lastPayment, "short").replace(", 2026", "")}</strong>
+                    <span>{t("Last payment")}</span>
+                    <strong>{formatDate(client.lastPayment, "short").replace(/,? 2026$/, "")}</strong>
                   </div>
                 </div>
 

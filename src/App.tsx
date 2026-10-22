@@ -6,6 +6,7 @@ import { Layout } from "./components/Layout";
 import { ToastProvider } from "./components/ToastProvider";
 import { QuickTransactionProvider } from "./components/QuickTransaction";
 import { EmptyState } from "./components/EmptyState";
+import { t } from "./i18n";
 import { DashboardPage } from "./pages/Dashboard";
 import { MoneyPage } from "./pages/Money";
 import { OrdersPage } from "./pages/Orders";
@@ -37,11 +38,11 @@ function NotFoundPage() {
     <div className="card" style={{ marginTop: 30 }}>
       <EmptyState
         icon={<Compass size={21} />}
-        title="This page is off the production board"
-        description="The route you followed does not exist. Head back to the workshop overview to find your way."
+        title={t("This page is off the production board")}
+        description={t("The route you followed does not exist. Head back to the workshop overview to find your way.")}
         action={
           <button type="button" className="btn btn-primary" onClick={() => navigate("/")}>
-            Back to overview
+            {t("Back to overview")}
           </button>
         }
       />

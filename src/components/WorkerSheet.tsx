@@ -4,6 +4,7 @@ import { BriefcaseBusiness, CalendarDays, Mail, Phone } from "lucide-react";
 import { api } from "../api";
 import type { Worker } from "../types";
 import { formatMoney } from "../lib/format";
+import { t } from "../i18n";
 import { invalidateData } from "../lib/invalidate";
 import { Sheet } from "../components/Sheet";
 import { useToast } from "../components/ToastProvider";
@@ -11,9 +12,9 @@ import { useToast } from "../components/ToastProvider";
 const departments = ["Operations", "Finance", "Production", "Sales", "Creative"];
 const avatarColors = ["#2f6b4f", "#b16a3e", "#496d9c", "#8f5883", "#a07d2f", "#4d7868", "#aa5b4e", "#61718a", "#798c3f"];
 const statuses = [
-  { value: "active", label: "Active" },
-  { value: "on_leave", label: "On leave" },
-  { value: "inactive", label: "Inactive" },
+  { value: "active", label: t("Active") },
+  { value: "on_leave", label: t("On leave") },
+  { value: "inactive", label: t("Inactive") },
 ];
 
 interface WorkerSheetProps {
@@ -65,7 +66,10 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
     },
     onSuccess: () => {
       invalidateData(queryClient);
-      toast.success(worker ? "Profile updated" : "Teammate added", `${form.name} is now part of the crew.`);
+      toast.success(
+        worker ? t("Profile updated") : t("Teammate added"),
+        t("{name} is now part of the crew.", { name: form.name }),
+      );
       onClose();
     },
     onError: (mutationError: Error) => setError(mutationError.message),
@@ -74,8 +78,8 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (!form.name.trim()) return setError("Enter the teammate's full name.");
-    if (!form.role.trim()) return setError("Add their role or job title.");
+    if (!form.name.trim()) return setError(t("Enter the teammate's full name."));
+    if (!form.role.trim()) return setError(t("Add their role or job title."));
     mutation.mutate();
   };
 
@@ -83,16 +87,16 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
     <Sheet
       open={open}
       onClose={onClose}
-      title={worker ? "Edit team profile" : "Add teammate"}
-      subtitle={worker ? "Keep contact details, role and salary current." : "Create a profile for a new member of the crew."}
+      title={worker ? t("Edit team profile") : t("Add teammate")}
+      subtitle={worker ? t("Keep contact details, role and salary current.") : t("Create a profile for a new member of the crew.")}
       footer={
         <>
           <button type="button" className="btn btn-ghost" onClick={onClose} disabled={mutation.isPending}>
-            Cancel
+            {t("Cancel")}
           </button>
           <div className="sheet-footer-actions">
             <button form="worker-form" type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving…" : worker ? "Save changes" : "Add teammate"}
+              {mutation.isPending ? t("Saving…") : worker ? t("Save changes") : t("Add teammate")}
             </button>
           </div>
         </>
@@ -101,12 +105,12 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
       <form id="worker-form" className="form-grid" onSubmit={submit}>
         <div className="field">
           <label className="field-label" htmlFor="worker-name">
-            Full name
+            {t("Full name")}
           </label>
           <input
             id="worker-name"
             className="input"
-            placeholder="e.g. Rustam Karimov"
+            placeholder={t("e.g. Rustam Karimov")}
             value={form.name}
             onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
             autoFocus
@@ -116,7 +120,7 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="worker-role">
-              Role
+              {t("Role")}
             </label>
             <div style={{ position: "relative" }}>
               <BriefcaseBusiness
@@ -127,7 +131,7 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
                 id="worker-role"
                 className="input"
                 style={{ paddingLeft: 31 }}
-                placeholder="e.g. Installation Lead"
+                placeholder={t("e.g. Installation Lead")}
                 value={form.role}
                 onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}
               />
@@ -135,7 +139,7 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
           </div>
           <div className="field">
             <label className="field-label" htmlFor="worker-department">
-              Department
+              {t("Department")}
             </label>
             <select
               id="worker-department"
@@ -144,7 +148,9 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
               onChange={(event) => setForm((current) => ({ ...current, department: event.target.value }))}
             >
               {departments.map((department) => (
-                <option key={department}>{department}</option>
+                <option key={department} value={department}>
+                  {t(department)}
+                </option>
               ))}
             </select>
           </div>
@@ -153,7 +159,7 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="worker-phone">
-              Phone
+              {t("Phone")}
             </label>
             <div style={{ position: "relative" }}>
               <Phone
@@ -172,7 +178,7 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
           </div>
           <div className="field">
             <label className="field-label" htmlFor="worker-email">
-              Email
+              {t("Email")}
             </label>
             <div style={{ position: "relative" }}>
               <Mail
@@ -195,7 +201,7 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="worker-salary">
-              Monthly salary
+              {t("Monthly salary")}
             </label>
             <input
               id="worker-salary"
@@ -205,11 +211,11 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
               value={form.salary}
               onChange={(event) => setForm((current) => ({ ...current, salary: event.target.value.replace(/[^\d]/g, "") }))}
             />
-            <span className="field-hint">{form.salary ? formatMoney(Number(form.salary)) : "Used for payroll entries."}</span>
+            <span className="field-hint">{form.salary ? formatMoney(Number(form.salary)) : t("Used for payroll entries.")}</span>
           </div>
           <div className="field">
             <label className="field-label" htmlFor="worker-status">
-              Status
+              {t("Status")}
             </label>
             <select
               id="worker-status"
@@ -229,7 +235,7 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="worker-hire">
-              Hire date
+              {t("Hire date")}
             </label>
             <div style={{ position: "relative" }}>
               <CalendarDays
@@ -247,13 +253,13 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
             </div>
           </div>
           <div className="field">
-            <span className="field-label">Profile colour</span>
+            <span className="field-label">{t("Profile colour")}</span>
             <div style={{ display: "flex", alignItems: "center", gap: 7, height: 42, flexWrap: "wrap" }}>
               {avatarColors.map((color) => (
                 <button
                   type="button"
                   key={color}
-                  aria-label={`Use profile colour ${color}`}
+                  aria-label={t("Use profile colour {color}", { color })}
                   onClick={() => setForm((current) => ({ ...current, avatarColor: color }))}
                   style={{
                     width: 22,
@@ -282,7 +288,7 @@ export function WorkerSheet({ open, onClose, worker }: WorkerSheetProps) {
             color: "var(--color-muted)",
           }}
         >
-          Profiles connect order assignments, payroll history and material usage in one place.
+          {t("Profiles connect order assignments, payroll history and material usage in one place.")}
         </div>
       </form>
     </Sheet>

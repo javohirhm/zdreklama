@@ -61,6 +61,7 @@ export interface DashboardStats {
 
 export interface MonthPoint {
   key: string;
+  month: string;
   label: string;
   income: number;
   expense: number;
@@ -249,4 +250,16 @@ export interface SearchResult {
   subtitle: string;
   meta?: number;
   path: string;
+  txType?: "income" | "expense";
+  category?: string;
+  orderNumber?: string;
+  clientName?: string | null;
+  status?: string;
+  stock?: number;
+  unit?: string;
+  low?: boolean;
+  role?: string;
+  department?: string;
+  industry?: string;
+  contactName?: string | null;
 }

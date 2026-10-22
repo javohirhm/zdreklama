@@ -346,6 +346,7 @@ app.get("/api/dashboard", (_req, res) => {
     const [y, m] = shiftMonth(currentKey, -i).split("-").map(Number);
     months.push({
       key: shiftMonth(currentKey, -i),
+      month: shiftMonth(currentKey, -i),
       label: new Date(y, m - 1, 1).toLocaleString("en-US", { month: "short" }),
       income: 0,
       expense: 0,
@@ -1011,6 +1012,8 @@ app.get("/api/search", (req, res) => {
       id: row.id,
       title: row.description,
       subtitle: `${row.type === "income" ? "Money in" : "Money out"} · ${row.category}`,
+      txType: row.type,
+      category: row.category,
       meta: row.amount,
       path: "/money",
     }));
@@ -1024,6 +1027,9 @@ app.get("/api/search", (req, res) => {
     id: p.id,
     title: p.name,
     subtitle: `${p.order_number} · ${p.client_name ?? "Internal"} · ${p.status}`,
+    orderNumber: p.order_number,
+    clientName: p.client_name ?? null,
+    status: p.status,
     path: `/orders?open=${p.id}`,
   }));
 
@@ -1034,6 +1040,9 @@ app.get("/api/search", (req, res) => {
       id: m.id,
       title: m.name,
       subtitle: `${m.stock} ${m.unit} in stock${Number(m.stock) <= Number(m.min_stock) ? " · low stock" : ""}`,
+      stock: Number(m.stock),
+      unit: m.unit,
+      low: Number(m.stock) <= Number(m.min_stock),
       path: "/materials",
     }));
 
@@ -1044,6 +1053,8 @@ app.get("/api/search", (req, res) => {
       id: w.id,
       title: w.name,
       subtitle: `${w.role} · ${w.department}`,
+      role: w.role,
+      department: w.department,
       path: "/team",
     }));
 
@@ -1054,6 +1065,8 @@ app.get("/api/search", (req, res) => {
       id: c.id,
       title: c.name,
       subtitle: `${c.industry}${c.contact_name ? ` · ${c.contact_name}` : ""}`,
+      industry: c.industry,
+      contactName: c.contact_name ?? null,
       path: "/clients",
     }));
 

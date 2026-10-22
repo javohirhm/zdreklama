@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { CheckCircle2, AlertCircle, X } from "lucide-react";
+import { t } from "../i18n";
 
 type ToastKind = "success" | "error";
 type ToastItem = { id: number; kind: ToastKind; title: string; message?: string };
@@ -54,7 +55,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               </div>
               <button
                 type="button"
-                aria-label="Dismiss notification"
+                aria-label={t("Dismiss notification")}
                 onClick={() => remove(toast.id)}
                 style={{ border: 0, background: "transparent", color: "rgba(255,255,255,.35)", padding: 2 }}
               >
