@@ -4,6 +4,7 @@ import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { db } from "./db.js";
 import { seedIfEmpty } from "./seed.js";
+import { installAuth } from "./auth.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -11,7 +12,9 @@ const PORT = Number(process.env.PORT || 4000);
 
 seedIfEmpty();
 
+app.set("trust proxy", "loopback");
 app.use(express.json({ limit: "1mb" }));
+installAuth(app, express);
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -1082,6 +1085,6 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ error: "Something went wrong. Please try again." });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, process.env.HOST || "0.0.0.0", () => {
   console.log(`ZD REKLAMA API running at http://localhost:${PORT}`);
 });

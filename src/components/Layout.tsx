@@ -32,6 +32,11 @@ const navigation = [
 export function Layout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { data: me } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => fetch("/api/me").then((r) => (r.ok ? (r.json() as Promise<{ username: string }>) : null)),
+    staleTime: Infinity,
+  });
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -161,10 +166,12 @@ export function Layout() {
           )}
 
           <div className="sidebar-user">
-            <Avatar name="Madina Yusupova" color="#b16a3e" size={32} />
+            <Avatar name={me?.username || "User"} color="#b16a3e" size={32} />
             <div>
-              <div className="sidebar-user-name">Madina Yusupova</div>
-              <div className="sidebar-user-role">Finance Manager</div>
+              <div className="sidebar-user-name">{me?.username || "…"}</div>
+              <a className="sidebar-user-role" href="/logout" style={{ textDecoration: "underline" }}>
+                Sign out
+              </a>
             </div>
           </div>
           <div className="sidebar-live">

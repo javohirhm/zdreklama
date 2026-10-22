@@ -120,6 +120,18 @@ PORT=8080 npm start
 
 SQLite data lives at `server/data/zdreklama.db` and is ignored by Git. Back up that file to preserve company data. Deleting it (or running `npm run seed`) resets the system to the demo dataset.
 
+## Users and login
+
+The dashboard is behind a sign-in page. Users live in `server/data/auth.json` (scrypt-hashed passwords, ignored by Git); sessions are HMAC-signed cookies valid for 30 days. Ten failed attempts from one IP lock it out for 15 minutes.
+
+```bash
+node server/auth.js set-password admin   # create a user or change their password
+node server/auth.js list                 # list users
+node server/auth.js remove admin         # delete a user
+```
+
+Create at least one user before first use, or nobody can sign in. `/api/health` and `/login` are the only public routes.
+
 ## Data model
 
 | Table | Purpose |
@@ -208,7 +220,7 @@ video/
 
 ## Assumptions and scope
 
-- This is an internal workshop tool. There is no authentication or role-based access yet; add auth and per-user permissions before exposing it on the public internet.
+- Every page and API route requires a password login (see **Users and login**). There is no role-based access: all users see everything.
 - Currency is UZS, dates use the local operating timezone, and the workshop is based in Kokand, Uzbekistan.
 - Demo people, order history, and figures are fictional. Client names are used only to make the demo dataset feel like real signage work.
 - There is no migration system. Schema changes require a database reset.
