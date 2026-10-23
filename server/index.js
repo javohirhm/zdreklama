@@ -5,8 +5,19 @@ import { fileURLToPath } from "node:url";
 import { db } from "./db.js";
 import { seedIfEmpty } from "./seed.js";
 import { installAuth } from "./auth.js";
+import { AgentError, askAgent, getAgentStatus, saveAgentConfig } from "./agent.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Local configuration is optional. Environment variables still take effect
+// as usual; this simply makes a git-ignored .env file convenient for desktop
+// and workshop deployments.
+try {
+  process.loadEnvFile?.(path.join(__dirname, "..", ".env"));
+} catch {
+  // No .env file, or it cannot be read. Environment variables still work.
+}
+
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
 
@@ -1184,6 +1195,37 @@ app.put("/api/clients/:id", (req, res) => {
     id
   );
   res.json({ client: getClients().find((c) => c.id === id) });
+});
+
+// ——— AI agent —————————————————————————————————————————————————
+app.get("/api/agent/config", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json(getAgentStatus());
+});
+
+app.post("/api/agent/config", (req, res, next) => {
+  try {
+    res.set("Cache-Control", "no-store");
+    res.json({ config: saveAgentConfig(req.body || {}) });
+  } catch (error) {
+    if (error instanceof AgentError) return res.status(error.status).json({ error: error.message });
+    next(error);
+  }
+});
+
+app.post("/api/agent/chat", async (req, res, next) => {
+  try {
+    res.set("Cache-Control", "no-store");
+    const result = await askAgent({
+      messages: req.body?.messages,
+      locale: req.body?.locale,
+      page: req.body?.page,
+    });
+    res.json(result);
+  } catch (error) {
+    if (error instanceof AgentError) return res.status(error.status).json({ error: error.message });
+    next(error);
+  }
 });
 
 // ——— Bootstrap, search, health ——————————————————————————————

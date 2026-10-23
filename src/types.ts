@@ -297,6 +297,24 @@ export interface MaterialsResponse {
   };
 }
 
+export type AgentRole = "user" | "assistant";
+
+export interface AgentMessage {
+  role: AgentRole;
+  content: string;
+}
+
+export interface AgentConfig {
+  configured: boolean;
+  model: string;
+  source: "local" | "environment" | null;
+}
+
+export interface AgentReply {
+  reply: string;
+  model: string;
+}
+
 export interface SearchResult {
   type: "transaction" | "order" | "material" | "worker" | "client" | "product" | "tool";
   id: number;

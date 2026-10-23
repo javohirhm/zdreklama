@@ -12,10 +12,26 @@ interface SheetProps {
   footer?: ReactNode;
   footerClassName?: string;
   header?: ReactNode;
+  headerActions?: ReactNode;
+  className?: string;
+  bodyClassName?: string;
   width?: number;
 }
 
-export function Sheet({ open, onClose, title, subtitle, children, footer, footerClassName, header, width = 880 }: SheetProps) {
+export function Sheet({
+  open,
+  onClose,
+  title,
+  subtitle,
+  children,
+  footer,
+  footerClassName,
+  header,
+  headerActions,
+  className,
+  bodyClassName,
+  width = 880,
+}: SheetProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +63,7 @@ export function Sheet({ open, onClose, title, subtitle, children, footer, footer
       }}
     >
       <section
-        className="sheet"
+        className={`sheet ${className ?? ""}`.trim()}
         style={{ width: `min(${width}px, 100%)` }}
         role="dialog"
         aria-modal="true"
@@ -63,12 +79,15 @@ export function Sheet({ open, onClose, title, subtitle, children, footer, footer
               </h2>
               {subtitle && <div className="sheet-subtitle">{subtitle}</div>}
             </div>
-            <button type="button" className="sheet-close" onClick={onClose} aria-label={t("Close panel")}>
-              <X size={16} />
-            </button>
+            <div className="sheet-header-actions">
+              {headerActions}
+              <button type="button" className="sheet-close" onClick={onClose} aria-label={t("Close panel")}>
+                <X size={16} />
+              </button>
+            </div>
           </header>
         )}
-        <div className="sheet-body">{children}</div>
+        <div className={`sheet-body ${bodyClassName ?? ""}`.trim()}>{children}</div>
         {footer && <footer className={`sheet-footer ${footerClassName ?? ""}`.trim()}>{footer}</footer>}
       </section>
     </div>,

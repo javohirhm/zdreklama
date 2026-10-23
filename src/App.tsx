@@ -5,6 +5,7 @@ import { Compass } from "lucide-react";
 import { Layout } from "./components/Layout";
 import { ToastProvider } from "./components/ToastProvider";
 import { QuickTransactionProvider } from "./components/QuickTransaction";
+import { AgentProvider } from "./components/AgentPanel";
 import { EmptyState } from "./components/EmptyState";
 import { t } from "./i18n";
 import { DashboardPage } from "./pages/Dashboard";
@@ -57,19 +58,21 @@ export default function App() {
       <ToastProvider>
         <QuickTransactionProvider>
           <BrowserRouter>
-            <ScrollToTop />
-            <Routes>
-              <Route element={<Layout />}>
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/money" element={<MoneyPage />} />
-                <Route path="/orders" element={<OrdersPage />} />
-                <Route path="/products" element={<ProductsPage />} />
-                <Route path="/materials" element={<MaterialsPage />} />
-                <Route path="/team" element={<TeamPage />} />
-                <Route path="/clients" element={<ClientsPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Route>
-            </Routes>
+            <AgentProvider>
+              <ScrollToTop />
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/money" element={<MoneyPage />} />
+                  <Route path="/orders" element={<OrdersPage />} />
+                  <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/materials" element={<MaterialsPage />} />
+                  <Route path="/team" element={<TeamPage />} />
+                  <Route path="/clients" element={<ClientsPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Route>
+              </Routes>
+            </AgentProvider>
           </BrowserRouter>
         </QuickTransactionProvider>
       </ToastProvider>

@@ -20,6 +20,7 @@ npm run video  # in another → video/zdreklama-demo.mp4
 - **Materials** — stock levels, unit costs, reorder thresholds, low-stock alerts, intake and usage, and a movement log linked to orders and workers. Receiving stock can create a `Materials` expense in the same database transaction.
 - **Team** — worker profiles with department, contact details, salary, hire date, order assignments, payroll history, material usage, and a one-click **Pay salary** flow.
 - **Clients** — brand accounts with contacts, industry, money received, order history, active orders, and last payment date.
+- **AI agent** — an optional read-only DeepSeek chat panel, available from every page. It answers questions about the live ledger, orders, production, clients, catalog, stock, team, payroll, and processes in Uzbek, Russian, or English.
 - **Command palette** — press `⌘K` / `Ctrl+K` to jump to any page or search products, tools, orders, clients, materials, workers, and ledger entries.
 - **Languages** — switch between Uzbek (default), Russian, and English from the sidebar. The sign-in page follows the same language choice.
 
@@ -57,9 +58,10 @@ The catalog is intentionally separate from the fixed order-level product enum. O
 - **Frontend:** React 19, TypeScript, Vite 8, Tailwind CSS v4, custom component CSS, Recharts, TanStack Query, React Router
 - **Backend:** Express 5
 - **Database:** SQLite through Node's built-in `node:sqlite` module
+- **AI agent:** DeepSeek chat completions (optional)
 - **Fonts:** Manrope and DM Mono, bundled locally with Fontsource
 
-No external services are required. User accounts and the SQLite database stay on your machine.
+The core platform works without external services. User accounts and the SQLite database stay on your machine. The optional AI agent calls DeepSeek only when an API key is configured and the admin asks a question.
 
 ## Getting started
 
@@ -155,6 +157,43 @@ The interface defaults to **Uzbek** and can be switched to **Russian** or **Engl
 
 Translation strings live in `src/i18n/locales/`. Run `node --experimental-strip-types scripts/check-i18n.mjs` to list any `t("...")` keys missing an Uzbek or Russian translation.
 
+## AI agent (DeepSeek)
+
+Open the **AI agent** from the sidebar or the sparkle button in the top bar. The panel is available on every page and stays open over the current screen. It can answer questions about money, profit, orders, production status, clients, products, equipment, materials, stock, team, payroll, and how those records connect. Answers follow the language of the question (Uzbek, Russian, or English).
+
+The agent is not given a static summary. For every question, the server rebuilds a live snapshot from SQLite and sends it to DeepSeek together with the recent conversation. The browser receives only the answer; it never receives the API key or the raw context.
+
+### Connect a key
+
+Use either option:
+
+1. **In the app** — open the panel and choose **Connect DeepSeek** (or the key icon). Paste a DeepSeek API key. It is stored in `server/data/agent.json` with mode `0600`; the file is ignored by Git and never returned to the browser.
+2. **On the server** — copy `.env.example` to `.env`, set `DEEPSEEK_API_KEY`, and restart the app:
+
+```bash
+cp .env.example .env
+# edit .env and set DEEPSEEK_API_KEY
+npm start
+```
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `DEEPSEEK_API_KEY` | empty | Enables the agent. Can also be saved from the panel. |
+| `DEEPSEEK_MODEL` | `deepseek-chat` | DeepSeek model name. |
+| `DEEPSEEK_API_URL` | `https://api.deepseek.com/chat/completions` | Full chat-completions URL, or a base URL for an OpenAI-compatible proxy. |
+| `AGENT_TRANSACTION_LIMIT` | `500` | Maximum recent ledger rows included in each snapshot. Complete totals are still calculated from the full ledger. |
+| `AGENT_MOVEMENT_LIMIT` | `500` | Maximum recent stock movements included in each snapshot. |
+
+An optional root `.env` file is loaded at startup. A key saved from the panel takes precedence over `DEEPSEEK_API_KEY`; use the key icon to replace it.
+
+### Privacy and scope
+
+The live snapshot sent to DeepSeek includes company records: client and worker names, phone numbers, emails, addresses, ledger descriptions and notes, order notes, balances, and payroll links. DeepSeek processes that data to answer the question. If company policy does not allow sending these records to DeepSeek, do not connect the agent; the rest of the platform works without it.
+
+The agent is **read-only**. It cannot create, edit, delete, pay, or change records. The panel keeps recent conversation history in the browser's local storage so it survives a language switch or reload; use the trash button to clear it.
+
+If DeepSeek rejects the key, the panel shows the error and keeps the conversation. Replace the key from the settings icon. The snapshot is rebuilt per question, so answers reflect the current database even if the page was opened earlier.
+
 ## Data model
 
 | Table | Purpose |
@@ -225,6 +264,10 @@ PUT    /api/workers/:id
 GET    /api/clients
 POST   /api/clients
 PUT    /api/clients/:id
+
+GET    /api/agent/config
+POST   /api/agent/config
+POST   /api/agent/chat
 ```
 
 Referenced clients, orders, workers, products, and tools are validated before writes. Invalid dates, non-positive amounts, over-stock usage, duplicate catalog names, and missing references return `400` rather than a database error. The catalog endpoint returns products, tools, active counts, tagged revenue, and the leading product.
@@ -238,8 +281,9 @@ server/
   index.js        Express API, queries, validation, static serving
   auth.js         Password login, sessions, and the login page
   db.js           SQLite connection and schema
+  agent.js        DeepSeek config, live platform snapshot, and chat requests
   seed.js         Demo dataset and reset
-  data/           SQLite database and auth store (ignored by Git)
+  data/           SQLite database, auth store, and optional agent key (ignored by Git)
 src/
   pages/          Dashboard, Money, Orders, Products, Materials, Team, Clients
   components/     Layout, sheets, drawers, dialogs, palette, shared UI
@@ -257,6 +301,7 @@ video/
 ## Assumptions and scope
 
 - Every page and API route requires a password login (see **Users and login**). There is no role-based access: all users see everything.
+- The AI agent is optional. It is disabled until a DeepSeek key is saved or supplied through the environment, and it sends the live company snapshot described above to DeepSeek for each question.
 - Currency is UZS, dates use the local operating timezone, and the workshop is based in Kokand, Uzbekistan.
 - Demo people, order history, and figures are fictional. Client names are used only to make the demo dataset feel like real signage work.
 - Existing ledger databases receive additive schema upgrades for the catalog columns. Other schema changes may still require a database reset or a manual migration.

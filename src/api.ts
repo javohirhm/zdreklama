@@ -1,4 +1,7 @@
 import type {
+  AgentConfig,
+  AgentMessage,
+  AgentReply,
   Bootstrap,
   CatalogData,
   CatalogProduct,
@@ -64,6 +67,12 @@ function qs(params: Record<string, string | number | undefined | null>) {
 export const api = {
   dashboard: () => request<DashboardData>("/api/dashboard"),
   bootstrap: () => request<Bootstrap>("/api/bootstrap"),
+
+  agentConfig: () => request<AgentConfig>("/api/agent/config"),
+  saveAgentConfig: (payload: { apiKey: string; model?: string }) =>
+    request<{ config: AgentConfig }>("/api/agent/config", { method: "POST", body: JSON.stringify(payload) }),
+  agentChat: (payload: { messages: AgentMessage[]; locale: string; page: string }) =>
+    request<AgentReply>("/api/agent/chat", { method: "POST", body: JSON.stringify(payload) }),
 
   transactions: (params: Record<string, string | number | undefined | null> = {}) =>
     request<TransactionsResponse>(`/api/transactions${qs(params)}`),
