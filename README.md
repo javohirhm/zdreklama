@@ -14,7 +14,7 @@ npm run video  # in another → video/zdreklama-demo.mp4
 ## What it does
 
 - **Dashboard** — current-month money in/out, net profit and margin, a six-month cash-flow chart, expense mix, open-order pulse, recent ledger entries, low-stock watch, and crew snapshot.
-- **Money** — the central income/expense ledger. Filter by type, month, or order; search descriptions, products, tools, and references; tag each entry with the product made and the equipment used; create, edit, and delete entries; export the filtered view to CSV.
+- **Money** — the central income/expense ledger. Filter by type, month, or order; search descriptions, products, tools, and references; tag each entry with the product made and the equipment used; create a new client without leaving the entry form, then save the payment against them; edit and delete entries; export the filtered view to CSV.
 - **Products** — the editable **Tovarlar** catalog. Define products and their types, units, and notes, plus the printers, plotters, routers, lifts, and other equipment the workshop uses. Archive items without losing their history.
 - **Orders** — a production board for every job, with quote value, collected payments, direct costs, balance due, crew, material movements, and recent ledger entries. Create and edit orders, assign a manager and crew, record payments and expenses, and move jobs through production.
 - **Materials** — stock levels, unit costs, reorder thresholds, low-stock alerts, intake and usage, and a movement log linked to orders and workers. Receiving stock can create a `Materials` expense in the same database transaction.

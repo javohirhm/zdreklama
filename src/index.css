@@ -839,6 +839,67 @@ a {
   color: var(--color-muted);
 }
 
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.field-label-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-forest-mid);
+  font: inherit;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.field-label-action:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.quick-client {
+  display: grid;
+  gap: 12px;
+  padding: 13px;
+  border: 1px dashed var(--color-line-strong);
+  border-radius: 12px;
+  background: var(--color-paper-warm);
+}
+
+.quick-client-head {
+  display: grid;
+  gap: 3px;
+}
+
+.quick-client-title {
+  color: var(--color-ink);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+}
+
+.quick-client-subtitle {
+  color: var(--color-muted);
+  font-size: 9.5px;
+  line-height: 1.5;
+}
+
+.quick-client-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .input,
 .select,
 .textarea {
