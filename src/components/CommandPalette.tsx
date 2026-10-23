@@ -12,6 +12,7 @@ import {
   Package,
   Printer,
   Search,
+  Sparkles,
   Users,
   Wallet,
 } from "lucide-react";
@@ -28,6 +29,7 @@ const navItems = [
   { title: t("Materials"), subtitle: t("Stock, usage and replenishment"), path: "/materials", icon: Boxes },
   { title: t("Team"), subtitle: t("Worker profiles and payroll"), path: "/team", icon: Users },
   { title: t("Clients"), subtitle: t("Brand accounts and contacts"), path: "/clients", icon: Building2 },
+  { title: t("AI agent"), subtitle: t("Live business assistant"), path: "/agent", icon: Sparkles },
 ];
 
 const resultIcons: Record<SearchResult["type"], typeof Wallet> = {

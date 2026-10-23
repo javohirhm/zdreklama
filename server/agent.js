@@ -1,10 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { db } from "./db.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CONFIG_FILE = path.join(__dirname, "data", "agent.json");
 const DEFAULT_ENDPOINT = "https://api.deepseek.com/chat/completions";
 const DEFAULT_MODEL = "deepseek-chat";
 const MAX_HISTORY = 20;
@@ -28,15 +23,6 @@ export class AgentError extends Error {
   }
 }
 
-function readLocalConfig() {
-  try {
-    const value = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
-    return value && typeof value === "object" ? value : {};
-  } catch {
-    return {};
-  }
-}
-
 function chatEndpoint() {
   const configured = (process.env.DEEPSEEK_API_URL || "").trim();
   if (!configured) return DEFAULT_ENDPOINT;
@@ -45,16 +31,11 @@ function chatEndpoint() {
 }
 
 function resolveConfig() {
-  const local = readLocalConfig();
-  const envKey = (process.env.DEEPSEEK_API_KEY || "").trim();
-  const localKey = typeof local.apiKey === "string" ? local.apiKey.trim() : "";
-  const envModel = (process.env.DEEPSEEK_MODEL || "").trim();
-  const localModel = typeof local.model === "string" ? local.model.trim() : "";
-
+  const apiKey = (process.env.DEEPSEEK_API_KEY || "").trim();
   return {
-    apiKey: localKey || envKey,
-    source: localKey ? "local" : envKey ? "environment" : null,
-    model: localModel || envModel || DEFAULT_MODEL,
+    apiKey,
+    source: apiKey ? "environment" : null,
+    model: (process.env.DEEPSEEK_MODEL || "").trim() || DEFAULT_MODEL,
     endpoint: chatEndpoint(),
   };
 }
@@ -66,40 +47,6 @@ export function getAgentStatus() {
     model: config.model,
     source: config.source,
   };
-}
-
-export function saveAgentConfig(body = {}) {
-  const apiKey = typeof body.apiKey === "string" ? body.apiKey.trim() : "";
-  if (!apiKey) throw new AgentError(400, "Enter your DeepSeek API key.");
-  if (apiKey.length < 12 || /\s/.test(apiKey)) {
-    throw new AgentError(400, "That DeepSeek API key does not look valid.");
-  }
-
-  const current = readLocalConfig();
-  const requestedModel = typeof body.model === "string" ? body.model.trim() : "";
-  const model = /^[a-zA-Z0-9._-]{2,64}$/.test(requestedModel)
-    ? requestedModel
-    : typeof current.model === "string"
-      ? current.model
-      : undefined;
-
-  fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
-  fs.writeFileSync(
-    CONFIG_FILE,
-    JSON.stringify(
-      {
-        ...(model ? { model } : {}),
-        apiKey,
-        updatedAt: new Date().toISOString(),
-      },
-      null,
-      2
-    ),
-    { mode: 0o600 }
-  );
-  fs.chmodSync(CONFIG_FILE, 0o600);
-
-  return getAgentStatus();
 }
 
 function localDateKey(date = new Date()) {
@@ -617,7 +564,7 @@ function normalizeHistory(input) {
 export async function askAgent({ messages, locale = "en", page = "/" } = {}) {
   const config = resolveConfig();
   if (!config.apiKey) {
-    throw new AgentError(503, "The AI agent is not configured. Add a DeepSeek API key in the agent settings.");
+    throw new AgentError(503, "The AI agent is not configured. Set DEEPSEEK_API_KEY on the server.");
   }
 
   const history = normalizeHistory(messages);
@@ -651,7 +598,7 @@ export async function askAgent({ messages, locale = "en", page = "/" } = {}) {
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
-      throw new AgentError(400, "DeepSeek rejected the API key. Update it in the agent settings.");
+      throw new AgentError(400, "DeepSeek rejected the platform API key. Update DEEPSEEK_API_KEY on the server and restart.");
     }
     if (response.status === 429) {
       throw new AgentError(429, "DeepSeek rate limit reached. Try again in a moment.");

@@ -69,8 +69,6 @@ export const api = {
   bootstrap: () => request<Bootstrap>("/api/bootstrap"),
 
   agentConfig: () => request<AgentConfig>("/api/agent/config"),
-  saveAgentConfig: (payload: { apiKey: string; model?: string }) =>
-    request<{ config: AgentConfig }>("/api/agent/config", { method: "POST", body: JSON.stringify(payload) }),
   agentChat: (payload: { messages: AgentMessage[]; locale: string; page: string }) =>
     request<AgentReply>("/api/agent/chat", { method: "POST", body: JSON.stringify(payload) }),
 

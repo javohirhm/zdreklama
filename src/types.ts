@@ -307,7 +307,7 @@ export interface AgentMessage {
 export interface AgentConfig {
   configured: boolean;
   model: string;
-  source: "local" | "environment" | null;
+  source: "environment" | null;
 }
 
 export interface AgentReply {

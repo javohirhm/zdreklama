@@ -20,7 +20,6 @@ import {
   X,
 } from "lucide-react";
 import { api } from "../api";
-import { useAgent } from "./AgentPanel";
 import { LogoMark } from "./Logo";
 import { Avatar } from "./Avatar";
 import { CommandPalette } from "./CommandPalette";
@@ -58,7 +57,6 @@ const navigation = [
 
 export function Layout() {
   const location = useLocation();
-  const { openAgent } = useAgent();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: me } = useQuery({
     queryKey: ["me"],
@@ -177,18 +175,15 @@ export function Layout() {
                 </NavLink>
               );
             })}
-            <button
-              type="button"
-              className="nav-item nav-agent-trigger"
-              onClick={() => {
-                openAgent();
-                setSidebarOpen(false);
-              }}
+            <NavLink
+              to="/agent"
+              className={({ isActive }) => `nav-item nav-agent-trigger ${isActive ? "active" : ""}`}
+              onClick={() => setSidebarOpen(false)}
             >
               <Sparkles />
               <span>{t("AI agent")}</span>
               <span className="nav-ai-tag">AI</span>
-            </button>
+            </NavLink>
           </nav>
 
           <div className="sidebar-spacer" />
@@ -260,15 +255,14 @@ export function Layout() {
             <span>· {today}</span>
           </div>
 
-          <button
-            type="button"
-            className="icon-btn ai-topbar-btn"
-            onClick={openAgent}
+          <NavLink
+            to="/agent"
+            className={({ isActive }) => `icon-btn ai-topbar-btn ${isActive ? "active" : ""}`}
             aria-label={t("Open AI agent")}
             title={t("Open AI agent")}
           >
             <Sparkles size={16} />
-          </button>
+          </NavLink>
 
           <div style={{ position: "relative" }} ref={notificationRef}>
             <button

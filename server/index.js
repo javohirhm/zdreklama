@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { db } from "./db.js";
 import { seedIfEmpty } from "./seed.js";
 import { installAuth } from "./auth.js";
-import { AgentError, askAgent, getAgentStatus, saveAgentConfig } from "./agent.js";
+import { AgentError, askAgent, getAgentStatus } from "./agent.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -1201,16 +1201,6 @@ app.put("/api/clients/:id", (req, res) => {
 app.get("/api/agent/config", (_req, res) => {
   res.set("Cache-Control", "no-store");
   res.json(getAgentStatus());
-});
-
-app.post("/api/agent/config", (req, res, next) => {
-  try {
-    res.set("Cache-Control", "no-store");
-    res.json({ config: saveAgentConfig(req.body || {}) });
-  } catch (error) {
-    if (error instanceof AgentError) return res.status(error.status).json({ error: error.message });
-    next(error);
-  }
 });
 
 app.post("/api/agent/chat", async (req, res, next) => {

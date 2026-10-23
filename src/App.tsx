@@ -5,7 +5,6 @@ import { Compass } from "lucide-react";
 import { Layout } from "./components/Layout";
 import { ToastProvider } from "./components/ToastProvider";
 import { QuickTransactionProvider } from "./components/QuickTransaction";
-import { AgentProvider } from "./components/AgentPanel";
 import { EmptyState } from "./components/EmptyState";
 import { t } from "./i18n";
 import { DashboardPage } from "./pages/Dashboard";
@@ -15,6 +14,7 @@ import { ProductsPage } from "./pages/Products";
 import { MaterialsPage } from "./pages/Materials";
 import { TeamPage } from "./pages/Team";
 import { ClientsPage } from "./pages/Clients";
+import { AgentPage } from "./pages/Agent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,21 +58,20 @@ export default function App() {
       <ToastProvider>
         <QuickTransactionProvider>
           <BrowserRouter>
-            <AgentProvider>
-              <ScrollToTop />
-              <Routes>
-                <Route element={<Layout />}>
-                  <Route path="/" element={<DashboardPage />} />
-                  <Route path="/money" element={<MoneyPage />} />
-                  <Route path="/orders" element={<OrdersPage />} />
-                  <Route path="/products" element={<ProductsPage />} />
-                  <Route path="/materials" element={<MaterialsPage />} />
-                  <Route path="/team" element={<TeamPage />} />
-                  <Route path="/clients" element={<ClientsPage />} />
-                  <Route path="*" element={<NotFoundPage />} />
-                </Route>
-              </Routes>
-            </AgentProvider>
+            <ScrollToTop />
+            <Routes>
+              <Route element={<Layout />}>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/money" element={<MoneyPage />} />
+                <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/products" element={<ProductsPage />} />
+                <Route path="/materials" element={<MaterialsPage />} />
+                <Route path="/team" element={<TeamPage />} />
+                <Route path="/clients" element={<ClientsPage />} />
+                <Route path="/agent" element={<AgentPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Route>
+            </Routes>
           </BrowserRouter>
         </QuickTransactionProvider>
       </ToastProvider>
