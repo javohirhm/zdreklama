@@ -1,5 +1,8 @@
 import type {
   Bootstrap,
+  CatalogData,
+  CatalogProduct,
+  CatalogTool,
   Client,
   DashboardData,
   Material,
@@ -51,6 +54,16 @@ export const api = {
   updateTransaction: (id: number, payload: Partial<Transaction>) =>
     request<{ transaction: Transaction }>(`/api/transactions/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
   deleteTransaction: (id: number) => request<{ ok: true }>(`/api/transactions/${id}`, { method: "DELETE" }),
+
+  catalog: () => request<CatalogData>("/api/catalog"),
+  createProduct: (payload: Record<string, unknown>) =>
+    request<{ product: CatalogProduct }>("/api/products", { method: "POST", body: JSON.stringify(payload) }),
+  updateProduct: (id: number, payload: Record<string, unknown>) =>
+    request<{ product: CatalogProduct }>(`/api/products/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  createTool: (payload: Record<string, unknown>) =>
+    request<{ tool: CatalogTool }>("/api/tools", { method: "POST", body: JSON.stringify(payload) }),
+  updateTool: (id: number, payload: Record<string, unknown>) =>
+    request<{ tool: CatalogTool }>(`/api/tools/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
 
   orders: () => request<{ orders: Order[] }>("/api/orders"),
   order: (id: number) => request<{ order: OrderDetail }>(`/api/orders/${id}`),

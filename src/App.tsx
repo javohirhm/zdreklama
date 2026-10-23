@@ -9,6 +9,7 @@ import { EmptyState } from "./components/EmptyState";
 import { DashboardPage } from "./pages/Dashboard";
 import { MoneyPage } from "./pages/Money";
 import { OrdersPage } from "./pages/Orders";
+import { ProductsPage } from "./pages/Products";
 import { MaterialsPage } from "./pages/Materials";
 import { TeamPage } from "./pages/Team";
 import { ClientsPage } from "./pages/Clients";
@@ -61,6 +62,7 @@ export default function App() {
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/money" element={<MoneyPage />} />
                 <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/products" element={<ProductsPage />} />
                 <Route path="/materials" element={<MaterialsPage />} />
                 <Route path="/team" element={<TeamPage />} />
                 <Route path="/clients" element={<ClientsPage />} />

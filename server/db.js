@@ -75,6 +75,25 @@ export function initSchema() {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS products (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'Other',
+      unit TEXT NOT NULL DEFAULT 'pcs',
+      notes TEXT,
+      active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS tools (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      kind TEXT NOT NULL DEFAULT 'Other',
+      notes TEXT,
+      active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
@@ -85,6 +104,8 @@ export function initSchema() {
       client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL,
       order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
       worker_id INTEGER REFERENCES workers(id) ON DELETE SET NULL,
+      product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
+      tool_id INTEGER REFERENCES tools(id) ON DELETE SET NULL,
       method TEXT NOT NULL DEFAULT 'Bank transfer',
       reference TEXT,
       notes TEXT,
@@ -104,10 +125,29 @@ export function initSchema() {
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_products_name ON products(name COLLATE NOCASE);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_tools_name ON tools(name COLLATE NOCASE);
+  `);
+
+  // Existing installations predate the catalog. Keep the upgrade additive and
+  // idempotent so their ledger is never dropped just to add the new links.
+  const transactionColumns = new Set(
+    db.prepare("PRAGMA table_info(transactions)").all().map((column) => column.name)
+  );
+  if (!transactionColumns.has("product_id")) {
+    db.exec("ALTER TABLE transactions ADD COLUMN product_id INTEGER REFERENCES products(id) ON DELETE SET NULL");
+  }
+  if (!transactionColumns.has("tool_id")) {
+    db.exec("ALTER TABLE transactions ADD COLUMN tool_id INTEGER REFERENCES tools(id) ON DELETE SET NULL");
+  }
+
+  db.exec(`
     CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
     CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
     CREATE INDEX IF NOT EXISTS idx_transactions_order ON transactions(order_id);
     CREATE INDEX IF NOT EXISTS idx_transactions_worker ON transactions(worker_id);
+    CREATE INDEX IF NOT EXISTS idx_transactions_product ON transactions(product_id);
+    CREATE INDEX IF NOT EXISTS idx_transactions_tool ON transactions(tool_id);
     CREATE INDEX IF NOT EXISTS idx_movements_material ON material_movements(material_id);
     CREATE INDEX IF NOT EXISTS idx_movements_date ON material_movements(date);
   `);

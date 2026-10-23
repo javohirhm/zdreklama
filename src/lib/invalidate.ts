@@ -5,6 +5,8 @@ const dataRoots = [
   ["transactions"],
   ["orders"],
   ["order"],
+  ["catalog"],
+  ["bootstrap"],
   ["materials"],
   ["workers"],
   ["worker"],

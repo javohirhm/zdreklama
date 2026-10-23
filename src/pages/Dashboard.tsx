@@ -471,6 +471,7 @@ export function DashboardPage() {
                   <span className="recent-title">{transaction.description}</span>
                   <span className="recent-meta">
                     {transaction.category} · {formatDate(transaction.date, "short")}
+                    {transaction.productName ? ` · ${transaction.productName}` : ""}
                   </span>
                 </span>
                 <span className={`recent-amount ${transaction.type === "income" ? "in" : "out"}`}>

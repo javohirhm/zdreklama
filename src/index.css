@@ -1110,6 +1110,90 @@ a {
   border-bottom: 0;
 }
 
+.catalog-table th,
+.catalog-table td {
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+.money-table {
+  min-width: 920px;
+  table-layout: fixed;
+}
+
+.money-table th,
+.money-table td {
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+.money-table th:nth-child(1),
+.money-table td:nth-child(1) {
+  width: 21%;
+}
+
+.money-table th:nth-child(2),
+.money-table td:nth-child(2) {
+  width: 9.5%;
+}
+
+.money-table th:nth-child(3),
+.money-table td:nth-child(3) {
+  width: 10.5%;
+}
+
+.money-table th:nth-child(4),
+.money-table td:nth-child(4) {
+  width: 14%;
+}
+
+.money-table th:nth-child(5),
+.money-table td:nth-child(5) {
+  width: 19.5%;
+}
+
+.money-table th:nth-child(6),
+.money-table td:nth-child(6) {
+  width: 8%;
+}
+
+.money-table th:nth-child(7),
+.money-table td:nth-child(7) {
+  width: 8.5%;
+}
+
+.money-table th:nth-child(8),
+.money-table td:nth-child(8) {
+  width: 9%;
+}
+
+.money-table td:first-child > div {
+  min-width: 0;
+}
+
+.money-table .entry-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.money-table .cell-main,
+.money-table .cell-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.money-table .badge {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.money-table .row-actions {
+  justify-content: flex-end;
+}
+
 .cell-main {
   font-size: 11.5px;
   font-weight: 700;
@@ -1136,6 +1220,39 @@ a {
   font-size: 11.5px;
   font-weight: 500;
   text-align: right;
+}
+
+.ledger-tags {
+  display: grid;
+  max-width: 176px;
+  gap: 3px;
+}
+
+.ledger-tag-line {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  color: var(--color-muted);
+}
+
+.ledger-tag-line svg {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  opacity: 0.65;
+}
+
+.ledger-tag-line span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledger-tag-line.product {
+  color: var(--color-ink-soft);
+  font-weight: 650;
 }
 
 .row-actions {
@@ -1739,8 +1856,11 @@ tr:focus-within .row-actions {
 .recent-meta {
   display: block;
   margin-top: 2px;
+  overflow: hidden;
   font-size: 9.5px;
   color: var(--color-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recent-amount {
@@ -1916,6 +2036,11 @@ tr:focus-within .row-actions {
   color: var(--color-negative);
 }
 
+.toolbar-summary .catalog-tagged {
+  color: var(--color-forest-mid);
+  font-weight: 700;
+}
+
 .summary-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1951,6 +2076,15 @@ tr:focus-within .row-actions {
   font-weight: 400;
   letter-spacing: 0.04em;
   color: var(--color-muted);
+}
+
+.summary-block strong.summary-name {
+  display: block;
+  overflow: hidden;
+  font-size: 16px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .summary-note {
@@ -2377,6 +2511,36 @@ tr:focus-within .row-actions {
 }
 
 .material-glyph svg {
+  width: 14px;
+  height: 14px;
+}
+
+.catalog-name-cell {
+  display: flex;
+  min-width: 215px;
+  align-items: center;
+  gap: 10px;
+}
+
+.catalog-glyph {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid #eadfc8;
+  border-radius: 8px;
+  background: var(--color-amber-soft);
+  color: #946512;
+}
+
+.catalog-glyph.equipment {
+  border-color: #d5dfce;
+  background: var(--color-sage-light);
+  color: var(--color-forest-mid);
+}
+
+.catalog-glyph svg {
   width: 14px;
   height: 14px;
 }

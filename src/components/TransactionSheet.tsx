@@ -16,6 +16,8 @@ export interface TransactionDefaults {
   clientId?: number | null;
   orderId?: number | null;
   workerId?: number | null;
+  productId?: number | null;
+  toolId?: number | null;
   date?: string;
   method?: string;
   notes?: string;
@@ -37,6 +39,8 @@ interface FormState {
   clientId: string;
   orderId: string;
   workerId: string;
+  productId: string;
+  toolId: string;
   method: string;
   reference: string;
   notes: string;
@@ -72,6 +76,8 @@ function emptyForm(defaults?: TransactionDefaults): FormState {
     clientId: defaults?.clientId ? String(defaults.clientId) : "",
     orderId: defaults?.orderId ? String(defaults.orderId) : "",
     workerId: defaults?.workerId ? String(defaults.workerId) : "",
+    productId: defaults?.productId ? String(defaults.productId) : "",
+    toolId: defaults?.toolId ? String(defaults.toolId) : "",
     method: defaults?.method || "Bank transfer",
     reference: "",
     notes: defaults?.notes || "",
@@ -99,6 +105,8 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
         clientId: transaction.clientId ? String(transaction.clientId) : "",
         orderId: transaction.orderId ? String(transaction.orderId) : "",
         workerId: transaction.workerId ? String(transaction.workerId) : "",
+        productId: transaction.productId ? String(transaction.productId) : "",
+        toolId: transaction.toolId ? String(transaction.toolId) : "",
         method: transaction.method,
         reference: transaction.reference || "",
         notes: transaction.notes || "",
@@ -120,6 +128,8 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
         clientId: form.clientId ? Number(form.clientId) : null,
         orderId: form.orderId ? Number(form.orderId) : null,
         workerId: form.workerId ? Number(form.workerId) : null,
+        productId: form.productId ? Number(form.productId) : null,
+        toolId: form.toolId ? Number(form.toolId) : null,
         method: form.method,
         reference: form.reference.trim(),
         notes: form.notes.trim(),
@@ -142,6 +152,10 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
   const orders = bootstrap?.orders || [];
   const clients = bootstrap?.clients || [];
   const workers = bootstrap?.workers || [];
+  const products = (bootstrap?.products || []).filter(
+    (product) => product.active || String(product.id) === form.productId
+  );
+  const tools = (bootstrap?.tools || []).filter((tool) => tool.active || String(tool.id) === form.toolId);
   const filteredOrders = form.clientId
     ? orders.filter((order) => String(order.clientId) === form.clientId)
     : orders;
@@ -302,6 +316,54 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
               value={form.date}
               onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))}
             />
+          </div>
+        </div>
+
+        <div className="form-grid-2">
+          <div className="field">
+            <label className="field-label" htmlFor="tx-product">
+              Product / service{" "}
+              <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· what was made</span>
+            </label>
+            <select
+              id="tx-product"
+              className="select"
+              value={form.productId}
+              onChange={(event) => setForm((current) => ({ ...current, productId: event.target.value }))}
+            >
+              <option value="">No product tagged</option>
+              {products.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name} — {product.category}
+                  {product.active ? "" : " (archived)"}
+                </option>
+              ))}
+            </select>
+            <span className="field-hint">
+              {products.length ? "Pick from the Products catalog." : "Add your products in the Products section."}
+            </span>
+          </div>
+          <div className="field">
+            <label className="field-label" htmlFor="tx-tool">
+              Tool / machine <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· optional</span>
+            </label>
+            <select
+              id="tx-tool"
+              className="select"
+              value={form.toolId}
+              onChange={(event) => setForm((current) => ({ ...current, toolId: event.target.value }))}
+            >
+              <option value="">No tool tagged</option>
+              {tools.map((tool) => (
+                <option key={tool.id} value={tool.id}>
+                  {tool.name} — {tool.kind}
+                  {tool.active ? "" : " (archived)"}
+                </option>
+              ))}
+            </select>
+            <span className="field-hint">
+              {tools.length ? "Plotter, printer, router or other equipment." : "Add your equipment in the Products section."}
+            </span>
           </div>
         </div>
 

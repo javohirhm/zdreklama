@@ -256,6 +256,65 @@ const materials = [
   { name: "Mounting tape", category: "Consumables", unit: "roll", stock: 26, min: 15, cost: 78000, supplier: "Uzprint Materials", location: "Warehouse A" },
 ];
 
+const products = [
+  { name: "Outdoor banner — flex 440g", category: "Banner / print", unit: "sqm", notes: "Weatherproof frontlit banner for facades and street promotion." },
+  { name: "Indoor banner / window print", category: "Banner / print", unit: "sqm", notes: "Frontlit or paper print for windows and indoor promotion." },
+  { name: "Volumetric letters (bo'rtma harf)", category: "Volumetric letters", unit: "set", notes: "Front-lit, halo-lit or non-lit acrylic letters." },
+  { name: "Entrance lightbox", category: "Lightbox", unit: "pcs", notes: "Single or double-sided illuminated lightbox." },
+  { name: "Facade sign", category: "Facade", unit: "sqm", notes: "Composite cladding, logo and illuminated lettering." },
+  { name: "Stela / pylon sign", category: "Stela / pylon", unit: "pcs", notes: "Freestanding illuminated pylon or entrance stela." },
+  { name: "Vehicle branding", category: "Car branding", unit: "vehicle", notes: "Partial or full vehicle wrap and fleet graphics." },
+  { name: "Interior signage", category: "Interior", unit: "set", notes: "Wayfinding, counter and department signs." },
+  { name: "Paper print / poster", category: "Print", unit: "sqm", notes: "Indoor poster, paper and presentation printing." },
+  { name: "LED display", category: "LED display", unit: "pcs", notes: "Indoor or outdoor LED media display." },
+  { name: "Custom fabrication", category: "Custom", unit: "job", notes: "One-off production and fabrication work." },
+];
+
+const tools = [
+  { name: "Large-format banner printer", kind: "Printer", notes: "3.2 m roll-to-roll printer for banner and vinyl." },
+  { name: "UV flatbed printer", kind: "Printer", notes: "Rigid acrylic, composite and board printing." },
+  { name: "Vinyl cutting plotter", kind: "Plotter", notes: "Cut vinyl, vehicle wrap and paint stencils." },
+  { name: "CNC router", kind: "CNC", notes: "Acrylic, composite and aluminium cutting." },
+  { name: "Laser cutter", kind: "Laser", notes: "Fine acrylic cutting and signage detail." },
+  { name: "Laminator", kind: "Finishing", notes: "Protective laminate and application tape." },
+  { name: "Welding machine", kind: "Fabrication", notes: "Steel frames, pylons and structural work." },
+  { name: "LED assembly bench", kind: "Assembly", notes: "LED modules, power supplies and lightbox wiring." },
+  { name: "Installation lift", kind: "Installation", notes: "Facade and high-level installation work." },
+  { name: "Delivery van", kind: "Transport", notes: "Site delivery and intercity transport." },
+];
+
+const orderProductMap = {
+  "Volumetric letters": "Volumetric letters (bo'rtma harf)",
+  "Facade sign": "Facade sign",
+  "Stela / pylon": "Stela / pylon sign",
+  Lightbox: "Entrance lightbox",
+  "LED display": "LED display",
+  "Car branding": "Vehicle branding",
+  "Banner / print": "Outdoor banner — flex 440g",
+  "Interior signage": "Interior signage",
+  Other: "Custom fabrication",
+};
+
+const orderToolMap = {
+  "Volumetric letters": "CNC router",
+  "Facade sign": "CNC router",
+  "Stela / pylon": "Welding machine",
+  Lightbox: "LED assembly bench",
+  "LED display": "LED assembly bench",
+  "Car branding": "Vinyl cutting plotter",
+  "Banner / print": "Large-format banner printer",
+  "Interior signage": "UV flatbed printer",
+  Other: "CNC router",
+};
+
+const directCostToolMap = {
+  Materials: null,
+  Printing: "Large-format banner printer",
+  Fabrication: "CNC router",
+  Installation: "Installation lift",
+  Transport: "Delivery van",
+};
+
 const directCostMix = [
   { category: "Materials", description: "Production materials", pct: 0.16, at: 0.28 },
   { category: "Printing", description: "Large-format print", pct: 0.06, at: 0.42 },
@@ -340,8 +399,8 @@ function addTransaction(type, amount, date, category, description, opts = {}) {
   const ref = opts.reference || `${prefix}-${date.slice(0, 4)}${date.slice(5, 7)}-${String(referenceSeq++).padStart(3, "0")}`;
   db.prepare(`
     INSERT INTO transactions
-      (type, amount, date, category, description, client_id, order_id, worker_id, method, reference, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (type, amount, date, category, description, client_id, order_id, worker_id, product_id, tool_id, method, reference, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     type,
     roundMoney(amount),
@@ -351,6 +410,8 @@ function addTransaction(type, amount, date, category, description, opts = {}) {
     opts.clientId ?? null,
     opts.orderId ?? null,
     opts.workerId ?? null,
+    opts.productId ?? null,
+    opts.toolId ?? null,
     opts.method || "Bank transfer",
     ref,
     opts.notes ?? null
@@ -413,6 +474,28 @@ function seedData() {
     Number(insertMaterial.run(m.name, m.category, m.unit, m.stock, m.min, m.cost, m.supplier, m.location).lastInsertRowid)
   );
 
+  const insertProduct = db.prepare(`
+    INSERT INTO products (name, category, unit, notes, active)
+    VALUES (?, ?, ?, ?, 1)
+  `);
+  const productIds = new Map(
+    products.map((product) => [
+      product.name,
+      Number(insertProduct.run(product.name, product.category, product.unit, product.notes).lastInsertRowid),
+    ])
+  );
+
+  const insertTool = db.prepare(`
+    INSERT INTO tools (name, kind, notes, active)
+    VALUES (?, ?, ?, 1)
+  `);
+  const toolIds = new Map(
+    tools.map((tool) => [
+      tool.name,
+      Number(insertTool.run(tool.name, tool.kind, tool.notes).lastInsertRowid),
+    ])
+  );
+
   const monthName = (offset) =>
     new Date(today.getFullYear(), today.getMonth() - offset, 1).toLocaleString("en-US", { month: "long" });
 
@@ -452,6 +535,8 @@ function seedData() {
   orders.forEach((order, index) => {
     const orderId = orderIds[index];
     const clientId = clientIds[order.client];
+    const productId = productIds.get(orderProductMap[order.product]) ?? null;
+    const primaryToolId = toolIds.get(orderToolMap[order.product]) ?? null;
 
     (paymentPlans[order.status] || []).forEach((payment) => {
       const date = between(order.order, order.deadline, payment.at);
@@ -462,7 +547,7 @@ function seedData() {
         date,
         "Order payment",
         `${payment.label} — ${order.name}`,
-        { clientId, orderId, method: rand() > 0.2 ? "Bank transfer" : "Cash" }
+        { clientId, orderId, productId, toolId: primaryToolId, method: rand() > 0.2 ? "Bank transfer" : "Cash" }
       );
     });
 
@@ -474,13 +559,20 @@ function seedData() {
       if (cost.at > progress) return;
       const date = between(order.order, order.deadline, cost.at);
       if (!notFuture(date)) return;
+      const costToolName = directCostToolMap[cost.category];
       addTransaction(
         "expense",
         order.quote * cost.pct,
         date,
         cost.category,
         `${cost.description} — ${order.name}`,
-        { clientId, orderId, method: cost.category === "Installation" || cost.category === "Transport" ? "Cash" : "Bank transfer" }
+        {
+          clientId,
+          orderId,
+          productId,
+          toolId: costToolName ? toolIds.get(costToolName) : null,
+          method: cost.category === "Installation" || cost.category === "Transport" ? "Cash" : "Bank transfer",
+        }
       );
     });
   });
@@ -556,6 +648,8 @@ export function seedDatabase({ reset = false } = {}) {
       DELETE FROM order_workers;
       DELETE FROM orders;
       DELETE FROM materials;
+      DELETE FROM tools;
+      DELETE FROM products;
       DELETE FROM workers;
       DELETE FROM clients;
       DELETE FROM sqlite_sequence;
@@ -577,6 +671,8 @@ if (isDirectRun) {
     clients: db.prepare("SELECT COUNT(*) AS c FROM clients").get().c,
     orders: db.prepare("SELECT COUNT(*) AS c FROM orders").get().c,
     workers: db.prepare("SELECT COUNT(*) AS c FROM workers").get().c,
+    products: db.prepare("SELECT COUNT(*) AS c FROM products").get().c,
+    tools: db.prepare("SELECT COUNT(*) AS c FROM tools").get().c,
     materials: db.prepare("SELECT COUNT(*) AS c FROM materials").get().c,
     transactions: db.prepare("SELECT COUNT(*) AS c FROM transactions").get().c,
     movements: db.prepare("SELECT COUNT(*) AS c FROM material_movements").get().c,

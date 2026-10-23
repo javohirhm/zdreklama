@@ -1,6 +1,6 @@
 # ZD REKLAMA — Signage Production OS
 
-A single operations platform for **ZD REKLAMA**, the signage workshop of **Ziynat Design MChJ** in Kokand. It connects the money ledger, production orders, material stock, crew payroll, and client accounts so every number can be traced back to the job that produced it.
+A single operations platform for **ZD REKLAMA**, the signage workshop of **Ziynat Design MChJ** in Kokand. It connects the money ledger, product and equipment catalog, production orders, material stock, crew payroll, and client accounts so every number can be traced back to the job that produced it.
 
 Built for signage work — volumetric letters, facade signs, pylons, lightboxes, LED displays, vehicle branding, banners, and interior signage. Currency is **UZS**.
 
@@ -14,12 +14,13 @@ npm run video  # in another → video/zdreklama-demo.mp4
 ## What it does
 
 - **Dashboard** — current-month money in/out, net profit and margin, a six-month cash-flow chart, expense mix, open-order pulse, recent ledger entries, low-stock watch, and crew snapshot.
-- **Money** — the central income/expense ledger. Filter by type, month, or order; search descriptions and references; create, edit, and delete entries; export the filtered view to CSV.
+- **Money** — the central income/expense ledger. Filter by type, month, or order; search descriptions, products, tools, and references; tag each entry with the product made and the equipment used; create, edit, and delete entries; export the filtered view to CSV.
+- **Products** — the editable **Tovarlar** catalog. Define products and their types, units, and notes, plus the printers, plotters, routers, lifts, and other equipment the workshop uses. Archive items without losing their history.
 - **Orders** — a production board for every job, with quote value, collected payments, direct costs, balance due, crew, material movements, and recent ledger entries. Create and edit orders, assign a manager and crew, record payments and expenses, and move jobs through production.
 - **Materials** — stock levels, unit costs, reorder thresholds, low-stock alerts, intake and usage, and a movement log linked to orders and workers. Receiving stock can create a `Materials` expense in the same database transaction.
 - **Team** — worker profiles with department, contact details, salary, hire date, order assignments, payroll history, material usage, and a one-click **Pay salary** flow.
 - **Clients** — brand accounts with contacts, industry, money received, order history, active orders, and last payment date.
-- **Command palette** — press `⌘K` / `Ctrl+K` to jump to any page or search orders, clients, materials, workers, and ledger entries.
+- **Command palette** — press `⌘K` / `Ctrl+K` to jump to any page or search products, tools, orders, clients, materials, workers, and ledger entries.
 
 ## Order workflow
 
@@ -36,6 +37,19 @@ The order board sorts active work by urgency: `install`, `production`, `design`,
 - linked material movements and their quantities, costs, orders, and workers
 
 Order economics are calculated from the ledger: `profit = linked income − linked expenses`, and `balance = quote − linked income` (cancelled orders show a zero balance).
+
+## Product and tool catalog
+
+The **Products** page (Tovarlar) is the workshop’s own catalog; nothing is hardcoded. Add a product with:
+
+- name, product type, unit (`sqm`, `set`, `pcs`, `job`, or any custom unit), notes
+- an active/archived state
+
+Add equipment with a name, equipment type (`Printer`, `Plotter`, `CNC`, `Lift`, or any custom type), notes, and an active/archived state. Product types, units, and equipment types are free-text fields with suggestions from existing records, so the catalog can grow with the workshop.
+
+When recording money in or out, the entry can be tagged with one product and one tool. Both appear in the ledger’s **Product / tool** column, in CSV exports, in recent dashboard entries, and in order drawer ledger entries. Archiving a product or tool removes it from new entry pickers while preserving every historical link.
+
+The catalog is intentionally separate from the fixed order-level product enum. Orders continue to use their production workflow types; the ledger catalog is the flexible commercial view of what was actually sold and which machine made it.
 
 ## Stack
 
@@ -77,11 +91,13 @@ The seed is an **October 2026 operating snapshot** of the workshop:
 | Clients | 8 |
 | Orders | 14 |
 | Workers | 10 |
+| Products | 11 |
+| Tools and equipment | 10 |
 | Materials | 12 |
 | Ledger entries | 183 |
 | Stock movements | 32 |
 
-Orders are split across the production flow: 1 new, 1 in design, 3 in production, 2 ready to install, 6 completed, and 1 cancelled. The dataset includes realistic Kokand signage work, payroll, workshop overhead, supplier deliveries, and material usage.
+Orders are split across the production flow: 1 new, 1 in design, 3 in production, 2 ready to install, 6 completed, and 1 cancelled. The dataset includes realistic Kokand signage work, payroll, workshop overhead, supplier deliveries, and material usage. **78 ledger entries** carry a product or tool tag so the catalog is useful immediately.
 
 For a clean reset:
 
@@ -89,7 +105,7 @@ For a clean reset:
 npm run seed
 ```
 
-This deletes the operational tables and reloads the demo data. There is no migration layer in this project; if the schema changes, delete `server/data/zdreklama.db` and reseed.
+This deletes the operational tables and reloads the demo data. Existing databases are upgraded additively for the product/tool columns, so old ledger records are preserved. A clean reset is still the simplest way to start from the demo dataset.
 
 > The seed is a demonstration snapshot. Replace the demo clients, workers, orders, and figures with your own records before using the system for live company data.
 
@@ -128,15 +144,19 @@ SQLite data lives at `server/data/zdreklama.db` and is ignored by Git. Back up t
 | `orders` | Order number, quote, product, status, dates, site, priority, manager, notes |
 | `order_workers` | Many-to-many crew assignments |
 | `workers` | Crew profiles, role, department, salary, employment status |
+| `products` | Editable product catalog: name, type, unit, notes, active state |
+| `tools` | Editable equipment catalog: name, type, notes, active state |
 | `materials` | Stock on hand, reorder level, unit cost, supplier, location |
 | `material_movements` | Stock in/out events linked to orders and workers |
-| `transactions` | Money in/out ledger linked to clients, orders, and workers |
+| `transactions` | Money in/out ledger linked to clients, orders, workers, products, and tools |
 
 ### Money and payroll
 
 - The ledger is cash-basis: an entry is money actually received or paid on its `date`.
+- Each entry may reference one `product` and one `tool`; both fields are optional so payroll, rent, and other overhead entries remain uncluttered.
+- Product/tool revenue and usage totals are calculated from those links, not stored separately.
 - Payroll is a normal ledger expense with category `Payroll`, linked to the worker. It appears in the worker’s paid-to-date total and in order economics when linked to an order.
-- Deleting a ledger entry removes it from order, client, and worker rollups. Operational records (orders, clients, workers, materials) are intentionally not deletable from the UI so production history is not lost.
+- Deleting a ledger entry removes it from order, client, worker, product, and tool rollups. Operational records (orders, clients, workers, products, tools, materials) are intentionally not deletable from the UI so production history is not lost; products and tools can be archived instead.
 
 ### Materials
 
@@ -161,6 +181,12 @@ POST   /api/transactions
 PUT    /api/transactions/:id
 DELETE /api/transactions/:id
 
+GET    /api/catalog
+POST   /api/products
+PUT    /api/products/:id
+POST   /api/tools
+PUT    /api/tools/:id
+
 GET    /api/orders
 GET    /api/orders/:id
 POST   /api/orders
@@ -181,9 +207,9 @@ POST   /api/clients
 PUT    /api/clients/:id
 ```
 
-Referenced clients, orders, and workers are validated before writes. Invalid dates, non-positive amounts, over-stock usage, and missing references return `400` rather than a database error.
+Referenced clients, orders, workers, products, and tools are validated before writes. Invalid dates, non-positive amounts, over-stock usage, duplicate catalog names, and missing references return `400` rather than a database error. The catalog endpoint returns products, tools, active counts, tagged revenue, and the leading product.
 
-Order statuses are `new`, `design`, `production`, `install`, `completed`, and `cancelled`. Product types are `Volumetric letters`, `Facade sign`, `Stela / pylon`, `Lightbox`, `LED display`, `Car branding`, `Banner / print`, `Interior signage`, and `Other`.
+Order statuses are `new`, `design`, `production`, `install`, `completed`, and `cancelled`. Order-level product types are `Volumetric letters`, `Facade sign`, `Stela / pylon`, `Lightbox`, `LED display`, `Car branding`, `Banner / print`, `Interior signage`, and `Other`. The ledger’s product and tool catalogs are separate and accept custom types and units.
 
 ## Project layout
 
@@ -194,7 +220,7 @@ server/
   seed.js         Demo dataset and reset
   data/           SQLite database (ignored by Git)
 src/
-  pages/          Dashboard, Money, Orders, Materials, Team, Clients
+  pages/          Dashboard, Money, Orders, Products, Materials, Team, Clients
   components/     Layout, sheets, drawers, dialogs, palette, shared UI
   api.ts          Typed API client
   types.ts        Shared frontend types
@@ -211,7 +237,7 @@ video/
 - This is an internal workshop tool. There is no authentication or role-based access yet; add auth and per-user permissions before exposing it on the public internet.
 - Currency is UZS, dates use the local operating timezone, and the workshop is based in Kokand, Uzbekistan.
 - Demo people, order history, and figures are fictional. Client names are used only to make the demo dataset feel like real signage work.
-- There is no migration system. Schema changes require a database reset.
+- Existing ledger databases receive additive schema upgrades for the catalog columns. Other schema changes may still require a database reset or a manual migration.
 - The frontend is a single-page app intended for a trusted internal network or a single-company deployment.
 
 ## Company

@@ -21,11 +21,34 @@ class HttpError extends Error {
 }
 
 const txSelect = `
-  SELECT t.*, c.name AS client_name, p.name AS order_name, w.name AS worker_name
+  SELECT t.*, c.name AS client_name, p.name AS order_name, w.name AS worker_name,
+    pr.name AS product_name, pr.category AS product_category,
+    tl.name AS tool_name, tl.kind AS tool_kind
   FROM transactions t
   LEFT JOIN clients c ON c.id = t.client_id
   LEFT JOIN orders p ON p.id = t.order_id
   LEFT JOIN workers w ON w.id = t.worker_id
+  LEFT JOIN products pr ON pr.id = t.product_id
+  LEFT JOIN tools tl ON tl.id = t.tool_id
+`;
+
+const catalogProductSelect = `
+  SELECT p.*,
+    (SELECT COUNT(*) FROM transactions t WHERE t.product_id = p.id) AS use_count,
+    (SELECT COUNT(*) FROM transactions t WHERE t.product_id = p.id AND t.type = 'income') AS sale_count,
+    COALESCE((SELECT SUM(t.amount) FROM transactions t
+      WHERE t.product_id = p.id AND t.type = 'income'), 0) AS revenue,
+    (SELECT MAX(t.date) FROM transactions t WHERE t.product_id = p.id) AS last_used
+  FROM products p
+`;
+
+const catalogToolSelect = `
+  SELECT tl.*,
+    (SELECT COUNT(*) FROM transactions t WHERE t.tool_id = tl.id) AS use_count,
+    (SELECT COUNT(DISTINCT t.order_id) FROM transactions t
+      WHERE t.tool_id = tl.id AND t.order_id IS NOT NULL) AS order_count,
+    (SELECT MAX(t.date) FROM transactions t WHERE t.tool_id = tl.id) AS last_used
+  FROM tools tl
 `;
 
 const materialSelect = `
@@ -68,12 +91,48 @@ function mapTransaction(row) {
     clientId: row.client_id,
     orderId: row.order_id,
     workerId: row.worker_id,
+    productId: row.product_id ?? null,
+    toolId: row.tool_id ?? null,
     method: row.method,
     reference: row.reference,
     notes: row.notes,
     clientName: row.client_name ?? null,
     orderName: row.order_name ?? null,
     workerName: row.worker_name ?? null,
+    productName: row.product_name ?? null,
+    productCategory: row.product_category ?? null,
+    toolName: row.tool_name ?? null,
+    toolKind: row.tool_kind ?? null,
+    createdAt: row.created_at,
+  };
+}
+
+function mapCatalogProduct(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    unit: row.unit,
+    notes: row.notes,
+    active: Boolean(row.active),
+    useCount: row.use_count ?? 0,
+    saleCount: row.sale_count ?? 0,
+    revenue: row.revenue ?? 0,
+    lastUsed: row.last_used ?? null,
+    createdAt: row.created_at,
+  };
+}
+
+function mapCatalogTool(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    kind: row.kind,
+    notes: row.notes,
+    active: Boolean(row.active),
+    useCount: row.use_count ?? 0,
+    orderCount: row.order_count ?? 0,
+    lastUsed: row.last_used ?? null,
     createdAt: row.created_at,
   };
 }
@@ -258,6 +317,18 @@ function validateReference(table, id, label) {
   const exists = db.prepare(`SELECT 1 FROM ${table} WHERE id = ?`).get(id);
   if (!exists) throw new HttpError(400, `${label} not found.`);
   return id;
+}
+
+function ensureUniqueCatalogName(table, name, id, label) {
+  const duplicate = db
+    .prepare(`SELECT id FROM ${table} WHERE name = ? COLLATE NOCASE AND id != ?`)
+    .get(name, id || 0);
+  if (duplicate) throw new HttpError(400, `${label} with this name already exists.`);
+}
+
+function activeValue(value, fallback = 1) {
+  if (value === undefined) return fallback ? 1 : 0;
+  return value ? 1 : 0;
 }
 
 function optionalDate(value) {
@@ -471,8 +542,10 @@ app.get("/api/transactions", (req, res) => {
   }
   if (req.query.search) {
     const search = `%${String(req.query.search).trim()}%`;
-    where.push("(t.description LIKE ? OR t.category LIKE ? OR t.reference LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR w.name LIKE ?)");
-    params.push(search, search, search, search, search, search);
+    where.push(
+      "(t.description LIKE ? OR t.category LIKE ? OR t.reference LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR w.name LIKE ? OR pr.name LIKE ? OR pr.category LIKE ? OR tl.name LIKE ? OR tl.kind LIKE ?)"
+    );
+    params.push(search, search, search, search, search, search, search, search, search, search);
   }
 
   const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
@@ -503,13 +576,29 @@ app.post("/api/transactions", (req, res) => {
   const orderId = validateReference("orders", parseId(body.orderId), "Order");
   const clientId = validateReference("clients", deriveClientId(orderId, parseId(body.clientId)), "Client");
   const workerId = validateReference("workers", parseId(body.workerId), "Team member");
+  const productId = validateReference("products", parseId(body.productId), "Product");
+  const toolId = validateReference("tools", parseId(body.toolId), "Tool");
   const method = requireString(body.method || "Bank transfer", "Payment method");
 
   const result = db.prepare(`
     INSERT INTO transactions
-      (type, amount, date, category, description, client_id, order_id, worker_id, method, reference, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(type, amount, date, category, description, clientId, orderId, workerId, method, body.reference?.trim() || null, body.notes?.trim() || null);
+      (type, amount, date, category, description, client_id, order_id, worker_id, product_id, tool_id, method, reference, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    type,
+    amount,
+    date,
+    category,
+    description,
+    clientId,
+    orderId,
+    workerId,
+    productId,
+    toolId,
+    method,
+    body.reference?.trim() || null,
+    body.notes?.trim() || null
+  );
 
   const row = db.prepare(`${txSelect} WHERE t.id = ?`).get(Number(result.lastInsertRowid));
   res.status(201).json({ transaction: mapTransaction(row) });
@@ -540,11 +629,21 @@ app.put("/api/transactions/:id", (req, res) => {
     body.workerId === undefined ? existing.worker_id : parseId(body.workerId),
     "Team member"
   );
+  const productId = validateReference(
+    "products",
+    body.productId === undefined ? existing.product_id : parseId(body.productId),
+    "Product"
+  );
+  const toolId = validateReference(
+    "tools",
+    body.toolId === undefined ? existing.tool_id : parseId(body.toolId),
+    "Tool"
+  );
   const method = requireString(body.method ?? existing.method, "Payment method");
 
   db.prepare(`
     UPDATE transactions SET type = ?, amount = ?, date = ?, category = ?, description = ?,
-      client_id = ?, order_id = ?, worker_id = ?, method = ?, reference = ?, notes = ?
+      client_id = ?, order_id = ?, worker_id = ?, product_id = ?, tool_id = ?, method = ?, reference = ?, notes = ?
     WHERE id = ?
   `).run(
     type,
@@ -555,6 +654,8 @@ app.put("/api/transactions/:id", (req, res) => {
     clientId,
     orderId,
     workerId,
+    productId,
+    toolId,
     method,
     body.reference === undefined ? existing.reference : body.reference?.trim() || null,
     body.notes === undefined ? existing.notes : body.notes?.trim() || null,
@@ -571,6 +672,124 @@ app.delete("/api/transactions/:id", (req, res) => {
   const result = db.prepare("DELETE FROM transactions WHERE id = ?").run(id);
   if (!result.changes) throw new HttpError(404, "Transaction not found.");
   res.json({ ok: true });
+});
+
+// ——— Products and tools ——————————————————————————————————————
+app.get("/api/catalog", (_req, res) => {
+  const products = db
+    .prepare(`${catalogProductSelect} ORDER BY p.active DESC, revenue DESC, p.name`)
+    .all()
+    .map(mapCatalogProduct);
+  const tools = db
+    .prepare(`${catalogToolSelect} ORDER BY tl.active DESC, use_count DESC, tl.name`)
+    .all()
+    .map(mapCatalogTool);
+  const tagged = db.prepare(`
+    SELECT COUNT(*) AS count,
+      COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) AS revenue
+    FROM transactions WHERE product_id IS NOT NULL OR tool_id IS NOT NULL
+  `).get();
+  const leading = [...products]
+    .filter((product) => product.saleCount > 0)
+    .sort((a, b) => b.revenue - a.revenue)[0] ?? null;
+
+  res.json({
+    products,
+    tools,
+    summary: {
+      productCount: products.length,
+      activeProducts: products.filter((product) => product.active).length,
+      toolCount: tools.length,
+      activeTools: tools.filter((tool) => tool.active).length,
+      taggedRevenue: tagged.revenue ?? 0,
+      taggedEntries: tagged.count ?? 0,
+      topProduct: leading
+        ? {
+            id: leading.id,
+            name: leading.name,
+            category: leading.category,
+            revenue: leading.revenue,
+            saleCount: leading.saleCount,
+          }
+        : null,
+    },
+  });
+});
+
+app.post("/api/products", (req, res) => {
+  const body = req.body || {};
+  const name = requireString(body.name, "Product name");
+  ensureUniqueCatalogName("products", name, null, "A product");
+  const result = db.prepare(`
+    INSERT INTO products (name, category, unit, notes, active)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(
+    name,
+    requireString(body.category, "Product type"),
+    requireString(body.unit || "pcs", "Unit"),
+    body.notes?.trim() || null,
+    activeValue(body.active, 1)
+  );
+  const product = db.prepare(`${catalogProductSelect} WHERE p.id = ?`).get(Number(result.lastInsertRowid));
+  res.status(201).json({ product: mapCatalogProduct(product) });
+});
+
+app.put("/api/products/:id", (req, res) => {
+  const id = parseId(req.params.id);
+  const existing = id ? db.prepare("SELECT * FROM products WHERE id = ?").get(id) : null;
+  if (!existing) throw new HttpError(404, "Product not found.");
+  const body = req.body || {};
+  const name = requireString(body.name ?? existing.name, "Product name");
+  ensureUniqueCatalogName("products", name, id, "A product");
+  db.prepare(`
+    UPDATE products SET name = ?, category = ?, unit = ?, notes = ?, active = ? WHERE id = ?
+  `).run(
+    name,
+    requireString(body.category ?? existing.category, "Product type"),
+    requireString(body.unit ?? existing.unit, "Unit"),
+    body.notes === undefined ? existing.notes : body.notes?.trim() || null,
+    activeValue(body.active, existing.active),
+    id
+  );
+  const product = db.prepare(`${catalogProductSelect} WHERE p.id = ?`).get(id);
+  res.json({ product: mapCatalogProduct(product) });
+});
+
+app.post("/api/tools", (req, res) => {
+  const body = req.body || {};
+  const name = requireString(body.name, "Tool name");
+  ensureUniqueCatalogName("tools", name, null, "A tool");
+  const result = db.prepare(`
+    INSERT INTO tools (name, kind, notes, active)
+    VALUES (?, ?, ?, ?)
+  `).run(
+    name,
+    requireString(body.kind, "Tool type"),
+    body.notes?.trim() || null,
+    activeValue(body.active, 1)
+  );
+  const tool = db.prepare(`${catalogToolSelect} WHERE tl.id = ?`).get(Number(result.lastInsertRowid));
+  res.status(201).json({ tool: mapCatalogTool(tool) });
+});
+
+app.put("/api/tools/:id", (req, res) => {
+  const id = parseId(req.params.id);
+  const existing = id ? db.prepare("SELECT * FROM tools WHERE id = ?").get(id) : null;
+  if (!existing) throw new HttpError(404, "Tool not found.");
+  const body = req.body || {};
+  const name = requireString(body.name ?? existing.name, "Tool name");
+  ensureUniqueCatalogName("tools", name, id, "A tool");
+  db.prepare(`
+    UPDATE tools SET name = ?, kind = ?, notes = ?, active = ? WHERE id = ?
+  `).run(
+    name,
+    requireString(body.kind ?? existing.kind, "Tool type"),
+    body.notes === undefined ? existing.notes : body.notes?.trim() || null,
+    activeValue(body.active, existing.active),
+    id
+  );
+  const tool = db.prepare(`${catalogToolSelect} WHERE tl.id = ?`).get(id);
+  res.json({ tool: mapCatalogTool(tool) });
 });
 
 // ——— Orders —————————————————————————————————————————————————
@@ -968,6 +1187,8 @@ app.get("/api/bootstrap", (_req, res) => {
   const clients = db.prepare("SELECT id, name, industry FROM clients ORDER BY name").all();
   const orders = db.prepare("SELECT id, order_number, name, client_id, status, product, quote FROM orders ORDER BY name").all();
   const workers = db.prepare("SELECT id, name, role, department, status, avatar_color FROM workers ORDER BY name").all();
+  const products = db.prepare("SELECT id, name, category, unit, active FROM products ORDER BY active DESC, name").all();
+  const tools = db.prepare("SELECT id, name, kind, active FROM tools ORDER BY active DESC, name").all();
   const dbIncomeCategories = db.prepare("SELECT DISTINCT category FROM transactions WHERE type = 'income' ORDER BY category").all().map((r) => r.category);
   const dbExpenseCategories = db.prepare("SELECT DISTINCT category FROM transactions WHERE type = 'expense' ORDER BY category").all().map((r) => r.category);
   const incomeCategories = [...new Set(["Order payment", "Deposit", "Design fee", "Installation fee", "Consulting", ...dbIncomeCategories])];
@@ -984,6 +1205,19 @@ app.get("/api/bootstrap", (_req, res) => {
       quote: p.quote,
     })),
     workers: workers.map((w) => ({ id: w.id, name: w.name, role: w.role, department: w.department, status: w.status, avatarColor: w.avatar_color })),
+    products: products.map((product) => ({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      unit: product.unit,
+      active: Boolean(product.active),
+    })),
+    tools: tools.map((tool) => ({
+      id: tool.id,
+      name: tool.name,
+      kind: tool.kind,
+      active: Boolean(tool.active),
+    })),
     categories: { income: incomeCategories, expense: expenseCategories },
     methods: ["Bank transfer", "Cash", "Card", "Cheque", "Other"],
     company: {
@@ -1001,16 +1235,38 @@ app.get("/api/search", (req, res) => {
   if (query.length < 2) return res.json({ results: [] });
   const search = `%${query}%`;
 
-  const transactions = db.prepare(`${txSelect} WHERE t.description LIKE ? OR t.category LIKE ? OR c.name LIKE ? OR p.name LIKE ? ORDER BY t.date DESC LIMIT 4`)
-    .all(search, search, search, search)
+  const transactions = db.prepare(`${txSelect} WHERE t.description LIKE ? OR t.category LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR pr.name LIKE ? OR tl.name LIKE ? ORDER BY t.date DESC LIMIT 4`)
+    .all(search, search, search, search, search, search)
     .map((row) => ({
       type: "transaction",
       id: row.id,
       title: row.description,
-      subtitle: `${row.type === "income" ? "Money in" : "Money out"} · ${row.category}`,
+      subtitle: `${row.type === "income" ? "Money in" : "Money out"} · ${row.category}${row.product_name ? ` · ${row.product_name}` : ""}`,
       meta: row.amount,
       path: "/money",
     }));
+
+  const products = db.prepare(`
+    SELECT * FROM products WHERE name LIKE ? OR category LIKE ? OR notes LIKE ?
+    ORDER BY active DESC, name LIMIT 4
+  `).all(search, search, search).map((product) => ({
+    type: "product",
+    id: product.id,
+    title: product.name,
+    subtitle: `${product.category} · ${product.unit}${product.active ? "" : " · archived"}`,
+    path: `/products?tab=products&search=${encodeURIComponent(product.name)}`,
+  }));
+
+  const tools = db.prepare(`
+    SELECT * FROM tools WHERE name LIKE ? OR kind LIKE ? OR notes LIKE ?
+    ORDER BY active DESC, name LIMIT 4
+  `).all(search, search, search).map((tool) => ({
+    type: "tool",
+    id: tool.id,
+    title: tool.name,
+    subtitle: `${tool.kind}${tool.active ? "" : " · archived"}`,
+    path: `/products?tab=tools&search=${encodeURIComponent(tool.name)}`,
+  }));
 
   const orders = db.prepare(`
     SELECT p.*, c.name AS client_name FROM orders p LEFT JOIN clients c ON c.id = p.client_id
@@ -1054,7 +1310,7 @@ app.get("/api/search", (req, res) => {
       path: "/clients",
     }));
 
-  res.json({ results: [...orders, ...clients, ...workers, ...materials, ...transactions] });
+  res.json({ results: [...products, ...tools, ...orders, ...clients, ...workers, ...materials, ...transactions] });
 });
 
 app.get("/api/health", (_req, res) => {

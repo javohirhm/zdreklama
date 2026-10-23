@@ -7,8 +7,10 @@ import {
   ArrowUpRight,
   Download,
   Filter,
+  Package,
   Pencil,
   Plus,
+  Printer,
   Search,
   Trash2,
   Wallet,
@@ -111,6 +113,10 @@ export function MoneyPage() {
       Type: transaction.type,
       Description: transaction.description,
       Category: transaction.category,
+      Product: transaction.productName || "",
+      "Product type": transaction.productCategory || "",
+      Tool: transaction.toolName || "",
+      "Tool type": transaction.toolKind || "",
       Client: transaction.clientName || "",
       Order: transaction.orderName || "",
       "Team member": transaction.workerName || "",
@@ -206,7 +212,7 @@ export function MoneyPage() {
             <Search />
             <input
               className="input"
-              placeholder="Search description, reference, client…"
+              placeholder="Search description, product, tool, client…"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               aria-label="Search ledger"
@@ -273,12 +279,13 @@ export function MoneyPage() {
           />
         ) : (
           <div className="table-wrap">
-            <table className="data-table">
+            <table className="data-table money-table">
               <thead>
                 <tr>
                   <th>Entry</th>
                   <th>Date</th>
                   <th>Category</th>
+                  <th>Product / tool</th>
                   <th>Order / client</th>
                   <th>Method</th>
                   <th style={{ textAlign: "right" }}>Amount</th>
@@ -293,8 +300,10 @@ export function MoneyPage() {
                         <span className={`tx-icon ${transaction.type === "income" ? "in" : "out"}`} style={{ width: 28, height: 28 }}>
                           {transaction.type === "income" ? <ArrowDownLeft /> : <ArrowUpRight />}
                         </span>
-                        <div>
-                          <div className="cell-main">{transaction.description}</div>
+                        <div className="entry-text">
+                          <div className="cell-main" title={transaction.description}>
+                            {transaction.description}
+                          </div>
                           <div className="cell-sub">{transaction.reference || `Entry #${transaction.id}`}</div>
                         </div>
                       </div>
@@ -308,7 +317,31 @@ export function MoneyPage() {
                       </span>
                     </td>
                     <td>
-                      <div className="cell-main" style={{ fontWeight: 600 }}>
+                      {transaction.productName || transaction.toolName ? (
+                        <div className="ledger-tags">
+                          {transaction.productName && (
+                            <span className="ledger-tag-line product" title={transaction.productName}>
+                              <Package />
+                              <span>{transaction.productName}</span>
+                            </span>
+                          )}
+                          {transaction.toolName && (
+                            <span className="ledger-tag-line" title={transaction.toolName}>
+                              <Printer />
+                              <span>{transaction.toolName}</span>
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="cell-sub">—</span>
+                      )}
+                    </td>
+                    <td>
+                      <div
+                        className="cell-main"
+                        style={{ fontWeight: 600 }}
+                        title={transaction.orderName || transaction.clientName || "General overhead"}
+                      >
                         {transaction.orderName || transaction.clientName || "General overhead"}
                       </div>
                       <div className="cell-sub">
@@ -324,7 +357,7 @@ export function MoneyPage() {
                       {transaction.type === "income" ? "+" : "−"}
                       {formatNumber(transaction.amount)}
                     </td>
-                    <td style={{ width: 70 }}>
+                    <td>
                       <div className="row-actions">
                         <button
                           type="button"

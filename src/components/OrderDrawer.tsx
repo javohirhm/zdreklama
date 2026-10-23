@@ -312,6 +312,7 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
                   </span>
                   <span style={{ fontSize: 8, color: "var(--color-muted-light)" }}>
                     {formatDate(transaction.date)} · {transaction.category}
+                    {transaction.productName ? ` · ${transaction.productName}` : ""}
                   </span>
                 </span>
               </span>

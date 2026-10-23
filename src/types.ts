@@ -23,13 +23,65 @@ export interface Transaction {
   clientId: number | null;
   orderId: number | null;
   workerId: number | null;
+  productId: number | null;
+  toolId: number | null;
   method: string;
   reference: string | null;
   notes: string | null;
   clientName: string | null;
   orderName: string | null;
   workerName: string | null;
+  productName: string | null;
+  productCategory: string | null;
+  toolName: string | null;
+  toolKind: string | null;
   createdAt: string;
+}
+
+export interface CatalogProduct {
+  id: number;
+  name: string;
+  category: string;
+  unit: string;
+  notes: string | null;
+  active: boolean;
+  useCount: number;
+  saleCount: number;
+  revenue: number;
+  lastUsed: string | null;
+  createdAt: string;
+}
+
+export interface CatalogTool {
+  id: number;
+  name: string;
+  kind: string;
+  notes: string | null;
+  active: boolean;
+  useCount: number;
+  orderCount: number;
+  lastUsed: string | null;
+  createdAt: string;
+}
+
+export interface CatalogData {
+  products: CatalogProduct[];
+  tools: CatalogTool[];
+  summary: {
+    productCount: number;
+    activeProducts: number;
+    toolCount: number;
+    activeTools: number;
+    taggedRevenue: number;
+    taggedEntries: number;
+    topProduct: {
+      id: number;
+      name: string;
+      category: string;
+      revenue: number;
+      saleCount: number;
+    } | null;
+  };
 }
 
 export interface DashboardStats {
@@ -211,6 +263,8 @@ export interface Bootstrap {
     quote: number;
   }>;
   workers: Array<{ id: number; name: string; role: string; department: string; status: WorkerStatus; avatarColor: string }>;
+  products: Array<{ id: number; name: string; category: string; unit: string; active: boolean }>;
+  tools: Array<{ id: number; name: string; kind: string; active: boolean }>;
   categories: { income: string[]; expense: string[] };
   methods: string[];
   company: {
@@ -243,7 +297,7 @@ export interface MaterialsResponse {
 }
 
 export interface SearchResult {
-  type: "transaction" | "order" | "material" | "worker" | "client";
+  type: "transaction" | "order" | "material" | "worker" | "client" | "product" | "tool";
   id: number;
   title: string;
   subtitle: string;

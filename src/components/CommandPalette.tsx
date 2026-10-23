@@ -9,6 +9,8 @@ import {
   CornerDownLeft,
   FolderKanban,
   LayoutDashboard,
+  Package,
+  Printer,
   Search,
   Users,
   Wallet,
@@ -21,6 +23,7 @@ const navItems = [
   { title: "Overview", subtitle: "Production and finance dashboard", path: "/", icon: LayoutDashboard },
   { title: "Money", subtitle: "Income and expense ledger", path: "/money", icon: Wallet },
   { title: "Orders", subtitle: "Signage production board", path: "/orders", icon: FolderKanban },
+  { title: "Products", subtitle: "Product and equipment catalog", path: "/products", icon: Package },
   { title: "Materials", subtitle: "Stock, usage and replenishment", path: "/materials", icon: Boxes },
   { title: "Team", subtitle: "Worker profiles and payroll", path: "/team", icon: Users },
   { title: "Clients", subtitle: "Brand accounts and contacts", path: "/clients", icon: Building2 },
@@ -32,6 +35,8 @@ const resultIcons: Record<SearchResult["type"], typeof Wallet> = {
   material: Boxes,
   worker: Users,
   client: Building2,
+  product: Package,
+  tool: Printer,
 };
 
 const resultLabels: Record<SearchResult["type"], string> = {
@@ -40,6 +45,8 @@ const resultLabels: Record<SearchResult["type"], string> = {
   worker: "Team",
   material: "Materials",
   transaction: "Ledger entries",
+  product: "Products",
+  tool: "Tools & equipment",
 };
 
 function targetFor(result: SearchResult) {
@@ -47,6 +54,8 @@ function targetFor(result: SearchResult) {
   if (result.type === "worker") return `/team?open=${result.id}`;
   if (result.type === "client") return `/clients?open=${result.id}`;
   if (result.type === "material") return `/materials?search=${encodeURIComponent(result.title)}`;
+  if (result.type === "product") return `/products?tab=products&search=${encodeURIComponent(result.title)}`;
+  if (result.type === "tool") return `/products?tab=tools&search=${encodeURIComponent(result.title)}`;
   return `/money?search=${encodeURIComponent(result.title)}`;
 }
 
@@ -102,7 +111,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
           <input
             className="command-input"
             autoFocus
-            placeholder="Search orders, clients, materials, people…"
+            placeholder="Search products, tools, orders, clients…"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
