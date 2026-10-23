@@ -15,7 +15,7 @@ interface SheetProps {
   width?: number;
 }
 
-export function Sheet({ open, onClose, title, subtitle, children, footer, footerClassName, header, width = 535 }: SheetProps) {
+export function Sheet({ open, onClose, title, subtitle, children, footer, footerClassName, header, width = 880 }: SheetProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -48,7 +48,7 @@ export function Sheet({ open, onClose, title, subtitle, children, footer, footer
     >
       <section
         className="sheet"
-        style={{ width: `min(${width}px, 100vw)` }}
+        style={{ width: `min(${width}px, 100%)` }}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
