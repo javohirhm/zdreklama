@@ -6,6 +6,7 @@ import type { CatalogProduct } from "../types";
 import { invalidateData } from "../lib/invalidate";
 import { Sheet } from "../components/Sheet";
 import { useToast } from "../components/ToastProvider";
+import { t } from "../i18n";
 
 interface ProductSheetProps {
   open: boolean;
@@ -55,8 +56,8 @@ export function ProductSheet({ open, onClose, product, categories, units }: Prod
       invalidateData(queryClient);
       const saved = "product" in result ? result.product : null;
       toast.success(
-        product ? "Product updated" : "Product added",
-        `${saved?.name || form.name} is ready to tag on ledger entries.`
+        product ? t("Product updated") : t("Product added"),
+        t("{name} is ready to tag on ledger entries.", { name: saved?.name || form.name })
       );
       onClose();
     },
@@ -66,9 +67,9 @@ export function ProductSheet({ open, onClose, product, categories, units }: Prod
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (!form.name.trim()) return setError("Give the product a name.");
-    if (!form.category.trim()) return setError("Add a product type, such as banner, lightbox or print.");
-    if (!form.unit.trim()) return setError("Add a unit, such as sqm, set or pcs.");
+    if (!form.name.trim()) return setError(t("Give the product a name."));
+    if (!form.category.trim()) return setError(t("Add a product type, such as banner, lightbox or print."));
+    if (!form.unit.trim()) return setError(t("Add a unit, such as sqm, set or pcs."));
     mutation.mutate();
   };
 
@@ -76,20 +77,20 @@ export function ProductSheet({ open, onClose, product, categories, units }: Prod
     <Sheet
       open={open}
       onClose={onClose}
-      title={product ? "Edit product" : "New product"}
+      title={product ? t("Edit product") : t("New product")}
       subtitle={
         product
-          ? "Update how this product appears when recording money."
-          : "Add anything the workshop sells or produces. You choose the type."
+          ? t("Update how this product appears when recording money.")
+          : t("Add anything the workshop sells or produces. You choose the type.")
       }
       footer={
         <>
           <button type="button" className="btn btn-ghost" onClick={onClose} disabled={mutation.isPending}>
-            Cancel
+            {t("Cancel")}
           </button>
           <div className="sheet-footer-actions">
             <button form="product-form" type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving…" : product ? "Save changes" : "Add product"}
+              {mutation.isPending ? t("Saving…") : product ? t("Save changes") : t("Add product")}
             </button>
           </div>
         </>
@@ -98,12 +99,12 @@ export function ProductSheet({ open, onClose, product, categories, units }: Prod
       <form id="product-form" className="form-grid" onSubmit={submit}>
         <div className="field">
           <label className="field-label" htmlFor="product-name">
-            Product name
+            {t("Product name")}
           </label>
           <input
             id="product-name"
             className="input"
-            placeholder="e.g. Outdoor banner — flex 440g"
+            placeholder={t("e.g. Outdoor banner — flex 440g")}
             value={form.name}
             onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
             autoFocus
@@ -113,13 +114,13 @@ export function ProductSheet({ open, onClose, product, categories, units }: Prod
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="product-category">
-              Product type
+              {t("Product type")}
             </label>
             <input
               id="product-category"
               className="input"
               list="product-category-options"
-              placeholder="e.g. Banner / print"
+              placeholder={t("e.g. Banner / print")}
               value={form.category}
               onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))}
             />
@@ -128,17 +129,17 @@ export function ProductSheet({ open, onClose, product, categories, units }: Prod
                 <option key={category} value={category} />
               ))}
             </datalist>
-            <span className="field-hint">Type anything your team uses.</span>
+            <span className="field-hint">{t("Type anything your team uses.")}</span>
           </div>
           <div className="field">
             <label className="field-label" htmlFor="product-unit">
-              Unit
+              {t("Unit")}
             </label>
             <input
               id="product-unit"
               className="input"
               list="product-unit-options"
-              placeholder="e.g. sqm"
+              placeholder={t("e.g. sqm")}
               value={form.unit}
               onChange={(event) => setForm((current) => ({ ...current, unit: event.target.value }))}
             />
@@ -147,18 +148,18 @@ export function ProductSheet({ open, onClose, product, categories, units }: Prod
                 <option key={unit} value={unit} />
               ))}
             </datalist>
-            <span className="field-hint">How you normally count it.</span>
+            <span className="field-hint">{t("How you normally count it.")}</span>
           </div>
         </div>
 
         <div className="field">
           <label className="field-label" htmlFor="product-notes">
-            Notes <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· optional</span>
+            {t("Notes")} <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· {t("optional")}</span>
           </label>
           <textarea
             id="product-notes"
             className="textarea"
-            placeholder="Material, finish or anything the team should know."
+            placeholder={t("Material, finish or anything the team should know.")}
             value={form.notes}
             onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
           />
@@ -172,8 +173,8 @@ export function ProductSheet({ open, onClose, product, categories, units }: Prod
             onChange={(event) => setForm((current) => ({ ...current, active: event.target.checked }))}
           />
           <label htmlFor="product-active">
-            Available for new ledger entries
-            <p>Archived products stay attached to old entries but disappear from new entry pickers.</p>
+            {t("Available for new ledger entries")}
+            <p>{t("Archived products stay attached to old entries but disappear from new entry pickers.")}</p>
           </label>
         </div>
 
@@ -192,7 +193,7 @@ export function ProductSheet({ open, onClose, product, categories, units }: Prod
           }}
         >
           <Package size={13} style={{ flexShrink: 0 }} />
-          Products are yours to define. The list appears in every money-in and money-out entry.
+          {t("Products are yours to define. The list appears in every money-in and money-out entry.")}
         </div>
       </form>
     </Sheet>

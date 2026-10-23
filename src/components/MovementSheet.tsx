@@ -7,6 +7,7 @@ import { formatMoney, formatNumber, todayIso } from "../lib/format";
 import { invalidateData } from "../lib/invalidate";
 import { Sheet } from "../components/Sheet";
 import { useToast } from "../components/ToastProvider";
+import { t } from "../i18n";
 
 interface MovementSheetProps {
   open: boolean;
@@ -72,7 +73,7 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!selectedMaterial) throw new Error("Choose a material first.");
+      if (!selectedMaterial) throw new Error(t("Choose a material first."));
       return api.createMovement(selectedMaterial.id, {
         type: form.type,
         quantity,
@@ -89,10 +90,18 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
     onSuccess: (result) => {
       invalidateData(queryClient);
       toast.success(
-        form.type === "in" ? "Stock received" : "Material usage logged",
+        form.type === "in" ? t("Stock received") : t("Material usage logged"),
         result.transaction
-          ? `${formatNumber(quantity, 1)} ${selectedMaterial?.unit} added · ${formatMoney(result.transaction.amount)} recorded as an expense.`
-          : `${formatNumber(quantity, 1)} ${selectedMaterial?.unit} of ${selectedMaterial?.name}.`
+          ? t("{qty} {unit} added · {amount} recorded as an expense.", {
+              qty: formatNumber(quantity, 1),
+              unit: t(selectedMaterial?.unit || ""),
+              amount: formatMoney(result.transaction.amount),
+            })
+          : t("{qty} {unit} of {name}.", {
+              qty: formatNumber(quantity, 1),
+              unit: t(selectedMaterial?.unit || ""),
+              name: selectedMaterial?.name || "",
+            })
       );
       onClose();
     },
@@ -102,10 +111,12 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (!selectedMaterial) return setError("Choose a material.");
-    if (!quantity || quantity <= 0) return setError("Quantity must be greater than zero.");
+    if (!selectedMaterial) return setError(t("Choose a material."));
+    if (!quantity || quantity <= 0) return setError(t("Quantity must be greater than zero."));
     if (form.type === "out" && quantity > selectedMaterial.stock) {
-      return setError(`Only ${formatNumber(selectedMaterial.stock, 1)} ${selectedMaterial.unit} in stock.`);
+      return setError(
+        t("Only {qty} {unit} in stock.", { qty: formatNumber(selectedMaterial.stock, 1), unit: t(selectedMaterial.unit) })
+      );
     }
     mutation.mutate();
   };
@@ -114,16 +125,16 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
     <Sheet
       open={open}
       onClose={onClose}
-      title={form.type === "in" ? "Receive stock" : "Log material usage"}
-      subtitle={form.type === "in" ? "Bring new material into the workshop store." : "Assign material to an order and crew member."}
+      title={form.type === "in" ? t("Receive stock") : t("Log material usage")}
+      subtitle={form.type === "in" ? t("Bring new material into the workshop store.") : t("Assign material to an order and crew member.")}
       footer={
         <>
           <button type="button" className="btn btn-ghost" onClick={onClose} disabled={mutation.isPending}>
-            Cancel
+            {t("Cancel")}
           </button>
           <div className="sheet-footer-actions">
             <button form="movement-form" type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving…" : form.type === "in" ? "Receive stock" : "Log usage"}
+              {mutation.isPending ? t("Saving…") : form.type === "in" ? t("Receive stock") : t("Log usage")}
             </button>
           </div>
         </>
@@ -140,8 +151,8 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
               <ArrowDownLeft size={15} />
             </span>
             <span>
-              <strong>Receive stock</strong>
-              <span>Add to inventory</span>
+              <strong>{t("Receive stock")}</strong>
+              <span>{t("Add to inventory")}</span>
             </span>
           </button>
           <button
@@ -153,15 +164,15 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
               <ArrowUpRight size={15} />
             </span>
             <span>
-              <strong>Use material</strong>
-              <span>Deduct from stock</span>
+              <strong>{t("Use material")}</strong>
+              <span>{t("Deduct from stock")}</span>
             </span>
           </button>
         </div>
 
         <div className="field">
           <label className="field-label" htmlFor="movement-material">
-            Material
+            {t("Material")}
           </label>
           <select
             id="movement-material"
@@ -169,10 +180,10 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
             value={form.materialId}
             onChange={(event) => handleMaterialChange(event.target.value)}
           >
-            <option value="">Choose material</option>
+            <option value="">{t("Choose material")}</option>
             {materials.map((item) => (
               <option key={item.id} value={item.id}>
-                {item.name} — {formatNumber(item.stock, 1)} {item.unit} available
+                {item.name} — {t("{qty} {unit} available", { qty: formatNumber(item.stock, 1), unit: t(item.unit) })}
               </option>
             ))}
           </select>
@@ -191,19 +202,19 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
             }}
           >
             <div style={{ background: "var(--color-paper-warm)", padding: "10px 12px" }}>
-              <div className="micro-label">In stock</div>
+              <div className="micro-label">{t("In stock")}</div>
               <strong className="mono" style={{ fontSize: 12, fontWeight: 500 }}>
-                {formatNumber(selectedMaterial.stock, 1)} {selectedMaterial.unit}
+                {formatNumber(selectedMaterial.stock, 1)} {t(selectedMaterial.unit)}
               </strong>
             </div>
             <div style={{ background: "var(--color-paper-warm)", padding: "10px 12px" }}>
-              <div className="micro-label">Reorder at</div>
+              <div className="micro-label">{t("Reorder at")}</div>
               <strong className="mono" style={{ fontSize: 12, fontWeight: 500 }}>
-                {formatNumber(selectedMaterial.minStock, 1)} {selectedMaterial.unit}
+                {formatNumber(selectedMaterial.minStock, 1)} {t(selectedMaterial.unit)}
               </strong>
             </div>
             <div style={{ background: "var(--color-paper-warm)", padding: "10px 12px" }}>
-              <div className="micro-label">Unit cost</div>
+              <div className="micro-label">{t("Unit cost")}</div>
               <strong className="mono" style={{ fontSize: 12, fontWeight: 500 }}>
                 {formatMoney(selectedMaterial.unitCost, false)}
               </strong>
@@ -214,7 +225,7 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="movement-quantity">
-              Quantity
+              {t("Quantity")}
             </label>
             <div style={{ position: "relative" }}>
               <input
@@ -237,13 +248,13 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
                   color: "var(--color-muted)",
                 }}
               >
-                {selectedMaterial?.unit || "unit"}
+                {selectedMaterial?.unit ? t(selectedMaterial.unit) : t("unit")}
               </span>
             </div>
           </div>
           <div className="field">
             <label className="field-label" htmlFor="movement-date">
-              Date
+              {t("Date")}
             </label>
             <input
               id="movement-date"
@@ -269,10 +280,10 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
             }}
           >
             <span style={{ fontSize: 9.5, color: "var(--color-muted)" }}>
-              Stock after this movement
+              {t("Stock after this movement")}
             </span>
             <strong className="mono" style={{ fontSize: 11, fontWeight: 500, color: stockAfter < 0 ? "var(--color-negative)" : "var(--color-forest)" }}>
-              {formatNumber(Math.max(0, stockAfter), 1)} {selectedMaterial.unit}
+              {formatNumber(Math.max(0, stockAfter), 1)} {t(selectedMaterial.unit)}
             </strong>
           </div>
         )}
@@ -280,7 +291,7 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="movement-order">
-              Order <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· optional</span>
+              {t("Order")} <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· {t("optional")}</span>
             </label>
             <select
               id="movement-order"
@@ -288,7 +299,7 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
               value={form.orderId}
               onChange={(event) => setForm((current) => ({ ...current, orderId: event.target.value }))}
             >
-              <option value="">No order</option>
+              <option value="">{t("No order")}</option>
               {(bootstrap?.orders || []).map((order) => (
                 <option key={order.id} value={order.id}>
                   {order.name}
@@ -298,7 +309,7 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
           </div>
           <div className="field">
             <label className="field-label" htmlFor="movement-worker">
-              Used by <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· optional</span>
+              {t("Used by")} <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· {t("optional")}</span>
             </label>
             <select
               id="movement-worker"
@@ -306,7 +317,7 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
               value={form.workerId}
               onChange={(event) => setForm((current) => ({ ...current, workerId: event.target.value }))}
             >
-              <option value="">Warehouse team</option>
+              <option value="">{t("Warehouse team")}</option>
               {(bootstrap?.workers || []).map((worker) => (
                 <option key={worker.id} value={worker.id}>
                   {worker.name}
@@ -320,7 +331,7 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
           <>
             <div className="field">
               <label className="field-label" htmlFor="movement-cost">
-                Unit cost
+                {t("Unit cost")}
               </label>
               <input
                 id="movement-cost"
@@ -329,7 +340,7 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
                 value={form.unitCost}
                 onChange={(event) => setForm((current) => ({ ...current, unitCost: event.target.value.replace(/[^\d]/g, "") }))}
               />
-              <span className="field-hint">Updates the material's cost basis for stock valuation.</span>
+              <span className="field-hint">{t("Updates the material's cost basis for stock valuation.")}</span>
             </div>
             <div className="checkbox-row">
               <input
@@ -339,11 +350,11 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
                 onChange={(event) => setForm((current) => ({ ...current, recordExpense: event.target.checked }))}
               />
               <div>
-                <label htmlFor="movement-expense">Record this purchase as a money-out entry</label>
+                <label htmlFor="movement-expense">{t("Record this purchase as a money-out entry")}</label>
                 <p>
                   {estimatedValue > 0
-                    ? `A Materials expense of ${formatMoney(estimatedValue)} will be added to the ledger.`
-                    : "No expense is recorded while the unit cost is zero."}
+                    ? t("A Materials expense of {amount} will be added to the ledger.", { amount: formatMoney(estimatedValue) })
+                    : t("No expense is recorded while the unit cost is zero.")}
                 </p>
               </div>
               <CircleDollarSign size={15} style={{ marginLeft: "auto", color: "var(--color-muted)", flexShrink: 0 }} />
@@ -353,12 +364,12 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
 
         <div className="field">
           <label className="field-label" htmlFor="movement-note">
-            Note
+            {t("Note")}
           </label>
           <input
             id="movement-note"
             className="input"
-            placeholder={form.type === "in" ? "e.g. Monthly ink replenishment" : "e.g. Acrylic faces for Yuksak letters"}
+            placeholder={form.type === "in" ? t("e.g. Monthly ink replenishment") : t("e.g. Acrylic faces for Yuksak letters")}
             value={form.note}
             onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
           />
@@ -379,7 +390,7 @@ export function MovementSheet({ open, onClose, material, mode }: MovementSheetPr
           }}
         >
           <Info size={12} />
-          Stock updates immediately; linked orders and team profiles will show this movement.
+          {t("Stock updates immediately; linked orders and team profiles will show this movement.")}
         </div>
       </form>
     </Sheet>

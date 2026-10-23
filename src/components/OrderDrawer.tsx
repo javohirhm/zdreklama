@@ -19,6 +19,7 @@ import { Sheet } from "../components/Sheet";
 import { Avatar } from "../components/Avatar";
 import { StatusBadge } from "../components/StatusBadge";
 import { useQuickTransaction } from "../components/QuickTransaction";
+import { plural, t } from "../i18n";
 
 interface OrderDrawerProps {
   orderId: number | null;
@@ -27,10 +28,10 @@ interface OrderDrawerProps {
 }
 
 const stageSteps = [
-  { key: "design", label: "Design", at: 1 },
-  { key: "production", label: "Production", at: 2 },
-  { key: "install", label: "Install", at: 3 },
-  { key: "completed", label: "Handover", at: 4 },
+  { key: "design", label: t("Design"), at: 1 },
+  { key: "production", label: t("Production"), at: 2 },
+  { key: "install", label: t("Install"), at: 3 },
+  { key: "completed", label: t("Handover"), at: 4 },
 ];
 
 const stageIndex: Record<string, number> = {
@@ -56,7 +57,7 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
 
   if (isLoading || !order) {
     return (
-      <Sheet open={Boolean(orderId)} onClose={onClose} title="Order detail" subtitle="Loading production records…">
+      <Sheet open={Boolean(orderId)} onClose={onClose} title={t("Order detail")} subtitle={t("Loading production records…")}>
         <div className="skeleton" style={{ height: 80, marginBottom: 14 }} />
         <div className="skeleton" style={{ height: 120, marginBottom: 14 }} />
         <div className="skeleton" style={{ height: 180 }} />
@@ -76,8 +77,8 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
       amount: order.balance > 0 ? order.balance : undefined,
       orderId: order.id,
       clientId: order.clientId,
-      description: `Payment — ${order.name}`,
-      notes: order.balance > 0 ? `Balance due ${formatMoney(order.balance)}` : "Additional payment",
+      description: t("Payment — {name}", { name: order.name }),
+      notes: order.balance > 0 ? t("Balance due {amount}", { amount: formatMoney(order.balance) }) : t("Additional payment"),
     });
 
   return (
@@ -89,26 +90,26 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
       header={
         <header className="detail-hero">
           <div className="detail-hero-actions">
-            <button type="button" className="icon-btn" onClick={() => onEdit(order)} aria-label="Edit order">
+            <button type="button" className="icon-btn" onClick={() => onEdit(order)} aria-label={t("Edit order")}>
               <Pencil size={14} />
             </button>
-            <button type="button" className="icon-btn" onClick={onClose} aria-label="Close panel">
+            <button type="button" className="icon-btn" onClick={onClose} aria-label={t("Close panel")}>
               <X size={15} />
             </button>
           </div>
           <div className="eyebrow">
-            {order.orderNumber} <span style={{ opacity: 0.4 }}>·</span> {order.product} <span style={{ opacity: 0.4 }}>·</span>{" "}
+            {order.orderNumber} <span style={{ opacity: 0.4 }}>·</span> {t(order.product)} <span style={{ opacity: 0.4 }}>·</span>{" "}
             {order.clientName}
           </div>
           <h2>{order.name}</h2>
           <p style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <MapPin size={11} /> {order.site || "Installation site not set"}
+            <MapPin size={11} /> {order.site || t("Installation site not set")}
           </p>
           <div style={{ display: "flex", gap: 6, marginTop: 13, flexWrap: "wrap" }}>
             <StatusBadge status={order.status} />
-            <span className={`badge priority-${order.priority}`}>{order.priority} priority</span>
+            <span className={`badge priority-${order.priority}`}>{t("{priority} priority", { priority: t(order.priority) })}</span>
             <span className="badge badge-neutral">
-              <CalendarRange size={9} /> {order.deadline ? formatDate(order.deadline) : "No deadline"}
+              <CalendarRange size={9} /> {order.deadline ? formatDate(order.deadline) : t("No deadline")}
             </span>
           </div>
         </header>
@@ -116,7 +117,7 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
       footer={
         <>
           <button type="button" className="btn btn-secondary" onClick={() => onEdit(order)}>
-            <Pencil size={13} /> Edit order
+            <Pencil size={13} /> {t("Edit order")}
           </button>
           <div className="sheet-footer-actions">
             <button
@@ -128,14 +129,14 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
                   category: "Materials",
                   orderId: order.id,
                   clientId: order.clientId,
-                  description: `Order expense — ${order.name}`,
+                  description: t("Order expense — {name}", { name: order.name }),
                 })
               }
             >
-              <Plus size={13} /> Add expense
+              <Plus size={13} /> {t("Add expense")}
             </button>
             <button type="button" className="btn btn-amber" onClick={recordPayment}>
-              <Banknote size={14} /> Record payment
+              <Banknote size={14} /> {t("Record payment")}
             </button>
           </div>
         </>
@@ -143,35 +144,35 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
     >
       <div className="detail-stats" style={{ padding: "0 0 19px", borderBottom: "1px solid var(--color-line)" }}>
         <div className="detail-stat">
-          <span>Quote</span>
+          <span>{t("Quote")}</span>
           <strong>{formatCompact(order.quote)}</strong>
-          <small>UZS {formatMoney(order.quote, false)}</small>
+          <small>{formatMoney(order.quote)}</small>
         </div>
         <div className="detail-stat">
-          <span>Paid</span>
+          <span>{t("Paid")}</span>
           <strong>{formatCompact(order.income)}</strong>
-          <small>{Math.round(paidPercent)}% collected</small>
+          <small>{t("{pct}% collected", { pct: Math.round(paidPercent) })}</small>
         </div>
         <div className="detail-stat">
-          <span>Balance due</span>
+          <span>{t("Balance due")}</span>
           <strong style={{ color: order.balance > 0 ? "var(--color-terracotta)" : "var(--color-positive)" }}>
             {formatCompact(order.balance)}
           </strong>
-          <small>UZS {formatMoney(order.balance, false)}</small>
+          <small>{formatMoney(order.balance)}</small>
         </div>
         <div className="detail-stat">
-          <span>Contribution</span>
+          <span>{t("Contribution")}</span>
           <strong style={{ color: order.profit >= 0 ? "var(--color-positive)" : "var(--color-negative)" }}>
             {order.profit >= 0 ? "+" : "−"}
             {formatCompact(Math.abs(order.profit))}
           </strong>
-          <small>{margin.toFixed(1)}% margin</small>
+          <small>{t("{pct}% margin", { pct: margin.toFixed(1) })}</small>
         </div>
       </div>
 
       <div className="detail-section">
         <div className="detail-section-head">
-          <span className="detail-section-title">Payment collected</span>
+          <span className="detail-section-title">{t("Payment collected")}</span>
           <span className="mono" style={{ fontSize: 9, color: "var(--color-muted)" }}>
             {Math.round(paidPercent)}%
           </span>
@@ -183,13 +184,13 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
           />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 8.5, color: "var(--color-muted)" }}>
-          <span>UZS {formatCompact(order.income)} collected</span>
-          <span>UZS {formatCompact(order.quote)} quote</span>
+          <span>{t("{amount} collected", { amount: t("UZS {amount}", { amount: formatCompact(order.income) }) })}</span>
+          <span>{t("{amount} quote", { amount: t("UZS {amount}", { amount: formatCompact(order.quote) }) })}</span>
         </div>
         <div className="detail-section-head" style={{ marginTop: 17 }}>
-          <span className="detail-section-title">Direct costs</span>
+          <span className="detail-section-title">{t("Direct costs")}</span>
           <span className="mono" style={{ fontSize: 9, color: "var(--color-muted)" }}>
-            {Math.round(costPercent)}% of quote
+            {t("{pct}% of quote", { pct: Math.round(costPercent) })}
           </span>
         </div>
         <div className="progress-track" style={{ height: 7 }}>
@@ -199,16 +200,16 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
           />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 8.5, color: "var(--color-muted)" }}>
-          <span>UZS {formatCompact(order.expense)} spent</span>
-          <span>{margin.toFixed(1)}% contribution margin</span>
+          <span>{t("{amount} spent", { amount: t("UZS {amount}", { amount: formatCompact(order.expense) }) })}</span>
+          <span>{t("{pct}% contribution margin", { pct: margin.toFixed(1) })}</span>
         </div>
       </div>
 
       <div className="detail-section">
         <div className="detail-section-head">
-          <span className="detail-section-title">Production stage</span>
+          <span className="detail-section-title">{t("Production stage")}</span>
           <span className="mono" style={{ fontSize: 8.5, color: "var(--color-muted)" }}>
-            {order.status === "cancelled" ? "Cancelled" : order.status}
+            {t(order.status)}
           </span>
         </div>
         <div className="order-stage order-stage-detail">
@@ -226,17 +227,17 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
 
       <div className="detail-section">
         <div className="detail-section-title" style={{ marginBottom: 10 }}>
-          Order details
+          {t("Order details")}
         </div>
         <div className="detail-row">
           <span className="detail-row-label">
-            <Boxes /> Product
+            <Boxes /> {t("Product")}
           </span>
-          <span className="detail-row-value">{order.product}</span>
+          <span className="detail-row-value">{t(order.product)}</span>
         </div>
         <div className="detail-row">
           <span className="detail-row-label">
-            <CalendarRange /> Timeline
+            <CalendarRange /> {t("Timeline")}
           </span>
           <span className="detail-row-value">
             {formatDate(order.orderDate)} → {formatDate(order.deadline)}
@@ -244,28 +245,28 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
         </div>
         <div className="detail-row">
           <span className="detail-row-label">
-            <UserRound /> Manager
+            <UserRound /> {t("Manager")}
           </span>
-          <span className="detail-row-value">{order.managerName || "Unassigned"}</span>
+          <span className="detail-row-value">{order.managerName || t("Unassigned")}</span>
         </div>
         <div className="detail-row">
           <span className="detail-row-label">
-            <Users /> Crew
+            <Users /> {t("Crew")}
           </span>
-          <span className="detail-row-value">{order.crew.length} people assigned</span>
+          <span className="detail-row-value">{plural(order.crew.length, { en: ["{n} person assigned", "{n} people assigned"], ru: ["{n} человек назначен", "{n} человека назначено", "{n} человек назначено"], uz: "{n} kishi biriktirilgan" })}</span>
         </div>
         <div className="detail-row">
           <span className="detail-row-label">
-            <Boxes /> Material movements
+            <Boxes /> {t("Material movements")}
           </span>
-          <span className="detail-row-value">{formatNumber(order.materialMovements)} logged</span>
+          <span className="detail-row-value">{t("{n} logged", { n: formatNumber(order.materialMovements) })}</span>
         </div>
       </div>
 
       {order.notes && (
         <div className="detail-section">
           <div className="detail-section-title" style={{ marginBottom: 7 }}>
-            Production notes
+            {t("Production notes")}
           </div>
           <p style={{ margin: 0, fontSize: 10, lineHeight: 1.6, color: "var(--color-muted)" }}>{order.notes}</p>
         </div>
@@ -273,7 +274,7 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
 
       <div className="detail-section">
         <div className="detail-section-title" style={{ marginBottom: 11 }}>
-          Crew on this order
+          {t("Crew on this order")}
         </div>
         <div className="crew-detail-list">
           {order.crew.length ? (
@@ -282,21 +283,21 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
                 <Avatar name={worker.name} color={worker.avatarColor} size={29} />
                 <div>
                   <div className="name">{worker.name}</div>
-                  <div className="role">{worker.role}</div>
+                  <div className="role">{t(worker.role)}</div>
                 </div>
               </div>
             ))
           ) : (
-            <span style={{ fontSize: 10, color: "var(--color-muted)" }}>No crew assigned yet.</span>
+            <span style={{ fontSize: 10, color: "var(--color-muted)" }}>{t("No crew assigned yet.")}</span>
           )}
         </div>
       </div>
 
       <div className="detail-section">
         <div className="detail-section-head">
-          <span className="detail-section-title">Recent ledger entries</span>
+          <span className="detail-section-title">{t("Recent ledger entries")}</span>
           <span className="mono" style={{ fontSize: 8, color: "var(--color-muted)" }}>
-            {order.transactions.length} shown
+            {t("{n} shown", { n: order.transactions.length })}
           </span>
         </div>
         {order.transactions.length ? (
@@ -311,7 +312,7 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
                     {transaction.description}
                   </span>
                   <span style={{ fontSize: 8, color: "var(--color-muted-light)" }}>
-                    {formatDate(transaction.date)} · {transaction.category}
+                    {formatDate(transaction.date)} · {t(transaction.category)}
                     {transaction.productName ? ` · ${transaction.productName}` : ""}
                   </span>
                 </span>
@@ -326,15 +327,15 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
             </div>
           ))
         ) : (
-          <span style={{ fontSize: 10, color: "var(--color-muted)" }}>No ledger entries linked yet.</span>
+          <span style={{ fontSize: 10, color: "var(--color-muted)" }}>{t("No ledger entries linked yet.")}</span>
         )}
       </div>
 
       <div className="detail-section">
         <div className="detail-section-head">
-          <span className="detail-section-title">Material usage</span>
+          <span className="detail-section-title">{t("Material usage")}</span>
           <span className="mono" style={{ fontSize: 8, color: "var(--color-muted)" }}>
-            {order.movements.length} shown
+            {t("{n} shown", { n: order.movements.length })}
           </span>
         </div>
         {order.movements.length ? (
@@ -349,18 +350,18 @@ export function OrderDrawer({ orderId, onClose, onEdit }: OrderDrawerProps) {
                     {movement.materialName}
                   </span>
                   <span style={{ fontSize: 8, color: "var(--color-muted-light)" }}>
-                    {movement.workerName || "Warehouse"} · {formatDate(movement.date)}
+                    {movement.workerName || t("Warehouse")} · {formatDate(movement.date)}
                   </span>
                 </span>
               </span>
               <span className="detail-row-value mono">
                 {movement.type === "out" ? "−" : "+"}
-                {formatNumber(movement.quantity, 1)} {movement.materialUnit}
+                {formatNumber(movement.quantity, 1)} {t(movement.materialUnit)}
               </span>
             </div>
           ))
         ) : (
-          <span style={{ fontSize: 10, color: "var(--color-muted)" }}>No material usage logged yet.</span>
+          <span style={{ fontSize: 10, color: "var(--color-muted)" }}>{t("No material usage logged yet.")}</span>
         )}
       </div>
     </Sheet>

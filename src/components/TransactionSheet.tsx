@@ -7,6 +7,7 @@ import { formatMoney, todayIso } from "../lib/format";
 import { invalidateData } from "../lib/invalidate";
 import { Sheet } from "../components/Sheet";
 import { useToast } from "../components/ToastProvider";
+import { t } from "../i18n";
 
 export interface TransactionDefaults {
   type?: TransactionType;
@@ -140,8 +141,8 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
     onSuccess: () => {
       invalidateData(queryClient);
       toast.success(
-        transaction ? "Entry updated" : form.type === "income" ? "Money in recorded" : "Money out recorded",
-        transaction ? "The ledger has been refreshed." : `${formatMoney(Number(form.amount))} · ${form.category}`
+        transaction ? t("Entry updated") : form.type === "income" ? t("Money in recorded") : t("Money out recorded"),
+        transaction ? t("The ledger has been refreshed.") : `${formatMoney(Number(form.amount))} · ${t(form.category)}`
       );
       onClose();
     },
@@ -163,10 +164,10 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (!form.amount || Number(form.amount) <= 0) return setError("Enter an amount greater than zero.");
-    if (!form.description.trim()) return setError("Add a short description for this entry.");
-    if (!form.category) return setError("Choose a category.");
-    if (!form.date) return setError("Choose a date.");
+    if (!form.amount || Number(form.amount) <= 0) return setError(t("Enter an amount greater than zero."));
+    if (!form.description.trim()) return setError(t("Add a short description for this entry."));
+    if (!form.category) return setError(t("Choose a category."));
+    if (!form.date) return setError(t("Choose a date."));
     mutation.mutate();
   };
 
@@ -196,16 +197,20 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
     <Sheet
       open={open}
       onClose={onClose}
-      title={transaction ? "Edit ledger entry" : "Record money movement"}
-      subtitle={transaction ? `Reference ${transaction.reference || `#${transaction.id}`}` : "Every sum in and out, in one clean ledger."}
+      title={transaction ? t("Edit ledger entry") : t("Record money movement")}
+      subtitle={
+        transaction
+          ? t("Reference {ref}", { ref: transaction.reference || `#${transaction.id}` })
+          : t("Every sum in and out, in one clean ledger.")
+      }
       footer={
         <>
           <button type="button" className="btn btn-ghost" onClick={onClose} disabled={mutation.isPending}>
-            Cancel
+            {t("Cancel")}
           </button>
           <div className="sheet-footer-actions">
             <button type="submit" form="transaction-form" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving…" : transaction ? "Save changes" : "Record entry"}
+              {mutation.isPending ? t("Saving…") : transaction ? t("Save changes") : t("Record entry")}
             </button>
           </div>
         </>
@@ -222,8 +227,8 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
               <ArrowDownLeft size={15} />
             </span>
             <span>
-              <strong>Money in</strong>
-              <span>Client payment</span>
+              <strong>{t("Money in")}</strong>
+              <span>{t("Client payment")}</span>
             </span>
           </button>
           <button
@@ -235,15 +240,15 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
               <ArrowUpRight size={15} />
             </span>
             <span>
-              <strong>Money out</strong>
-              <span>Cost or payout</span>
+              <strong>{t("Money out")}</strong>
+              <span>{t("Cost or payout")}</span>
             </span>
           </button>
         </div>
 
         <div className="field">
           <label className="field-label" htmlFor="tx-amount">
-            Amount
+            {t("Amount")}
           </label>
           <div style={{ position: "relative" }}>
             <input
@@ -268,22 +273,22 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
                 letterSpacing: ".06em",
               }}
             >
-              UZS
+              {t("UZS")}
             </span>
           </div>
           <span className="field-hint">
-            {form.amount ? formatMoney(Number(form.amount)) : "Enter the full amount in Uzbek sum."}
+            {form.amount ? formatMoney(Number(form.amount)) : t("Enter the full amount in Uzbek sum.")}
           </span>
         </div>
 
         <div className="field">
           <label className="field-label" htmlFor="tx-description">
-            Description
+            {t("Description")}
           </label>
           <input
             id="tx-description"
             className="input"
-            placeholder={form.type === "income" ? "e.g. Deposit — Yuksak Travel" : "e.g. Acrylic, LED modules and print"}
+            placeholder={form.type === "income" ? t("e.g. Deposit — Yuksak Travel") : t("e.g. Acrylic, LED modules and print")}
             value={form.description}
             onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
           />
@@ -292,7 +297,7 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="tx-category">
-              Category
+              {t("Category")}
             </label>
             <select
               id="tx-category"
@@ -301,13 +306,15 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
               onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))}
             >
               {categories.map((category) => (
-                <option key={category}>{category}</option>
+                <option key={category} value={category}>
+                  {t(category)}
+                </option>
               ))}
             </select>
           </div>
           <div className="field">
             <label className="field-label" htmlFor="tx-date">
-              Date
+              {t("Date")}
             </label>
             <input
               id="tx-date"
@@ -322,8 +329,8 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="tx-product">
-              Product / service{" "}
-              <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· what was made</span>
+              {t("Product / service")}{" "}
+              <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· {t("what was made")}</span>
             </label>
             <select
               id="tx-product"
@@ -331,21 +338,24 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
               value={form.productId}
               onChange={(event) => setForm((current) => ({ ...current, productId: event.target.value }))}
             >
-              <option value="">No product tagged</option>
+              <option value="">{t("No product tagged")}</option>
               {products.map((product) => (
                 <option key={product.id} value={product.id}>
                   {product.name} — {product.category}
-                  {product.active ? "" : " (archived)"}
+                  {product.active ? "" : ` ${t("(archived)")}`}
                 </option>
               ))}
             </select>
             <span className="field-hint">
-              {products.length ? "Pick from the Products catalog." : "Add your products in the Products section."}
+              {products.length
+                ? t("Pick from the Products catalog.")
+                : t("Add your products in the Products section.")}
             </span>
           </div>
           <div className="field">
             <label className="field-label" htmlFor="tx-tool">
-              Tool / machine <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· optional</span>
+              {t("Tool / machine")}{" "}
+              <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· {t("optional")}</span>
             </label>
             <select
               id="tx-tool"
@@ -353,16 +363,18 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
               value={form.toolId}
               onChange={(event) => setForm((current) => ({ ...current, toolId: event.target.value }))}
             >
-              <option value="">No tool tagged</option>
+              <option value="">{t("No tool tagged")}</option>
               {tools.map((tool) => (
                 <option key={tool.id} value={tool.id}>
                   {tool.name} — {tool.kind}
-                  {tool.active ? "" : " (archived)"}
+                  {tool.active ? "" : ` ${t("(archived)")}`}
                 </option>
               ))}
             </select>
             <span className="field-hint">
-              {tools.length ? "Plotter, printer, router or other equipment." : "Add your equipment in the Products section."}
+              {tools.length
+                ? t("Plotter, printer, router or other equipment.")
+                : t("Add your equipment in the Products section.")}
             </span>
           </div>
         </div>
@@ -370,7 +382,7 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="tx-order">
-              Order <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· optional</span>
+              {t("Order")} <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· {t("optional")}</span>
             </label>
             <select
               id="tx-order"
@@ -378,7 +390,7 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
               value={form.orderId}
               onChange={(event) => handleOrderChange(event.target.value)}
             >
-              <option value="">No order</option>
+              <option value="">{t("No order")}</option>
               {filteredOrders.map((order) => (
                 <option key={order.id} value={order.id}>
                   {order.name}
@@ -388,7 +400,7 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
           </div>
           <div className="field">
             <label className="field-label" htmlFor="tx-client">
-              Client <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· optional</span>
+              {t("Client")} <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· {t("optional")}</span>
             </label>
             <select
               id="tx-client"
@@ -396,7 +408,7 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
               value={form.clientId}
               onChange={(event) => setForm((current) => ({ ...current, clientId: event.target.value, orderId: "" }))}
             >
-              <option value="">No client</option>
+              <option value="">{t("No client")}</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.name}
@@ -409,7 +421,7 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="tx-method">
-              Payment method
+              {t("Payment method")}
             </label>
             <select
               id="tx-method"
@@ -418,13 +430,15 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
               onChange={(event) => setForm((current) => ({ ...current, method: event.target.value }))}
             >
               {(bootstrap?.methods || ["Bank transfer", "Cash", "Card", "Cheque", "Other"]).map((method) => (
-                <option key={method}>{method}</option>
+                <option key={method} value={method}>
+                  {t(method)}
+                </option>
               ))}
             </select>
           </div>
           <div className="field">
             <label className="field-label" htmlFor="tx-worker">
-              Team member <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· optional</span>
+              {t("Team member")} <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· {t("optional")}</span>
             </label>
             <select
               id="tx-worker"
@@ -432,7 +446,7 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
               value={form.workerId}
               onChange={(event) => setForm((current) => ({ ...current, workerId: event.target.value }))}
             >
-              <option value="">No team member</option>
+              <option value="">{t("No team member")}</option>
               {workers.map((worker) => (
                 <option key={worker.id} value={worker.id}>
                   {worker.name}
@@ -445,24 +459,24 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="tx-reference">
-              Reference
+              {t("Reference")}
             </label>
             <input
               id="tx-reference"
               className="input"
-              placeholder="Invoice / receipt no."
+              placeholder={t("Invoice / receipt no.")}
               value={form.reference}
               onChange={(event) => setForm((current) => ({ ...current, reference: event.target.value }))}
             />
           </div>
           <div className="field">
             <label className="field-label" htmlFor="tx-notes">
-              Note
+              {t("Note")}
             </label>
             <input
               id="tx-notes"
               className="input"
-              placeholder="Optional context"
+              placeholder={t("Optional context")}
               value={form.notes}
               onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
             />
@@ -486,8 +500,8 @@ export function TransactionSheet({ open, onClose, transaction, defaults }: Trans
         >
           <CalendarDays size={14} />
           {form.type === "income"
-            ? "This will add to the money-in ledger and any linked order."
-            : "This will count against operating expenses and any linked order."}
+            ? t("This will add to the money-in ledger and any linked order.")
+            : t("This will count against operating expenses and any linked order.")}
           <CircleDollarSign size={14} style={{ marginLeft: "auto" }} />
         </div>
       </form>

@@ -1,6 +1,7 @@
 import { useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import { AlertTriangle, X } from "lucide-react";
+import { t } from "../i18n";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -16,7 +17,7 @@ export function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = "Delete",
+  confirmLabel = t("Delete"),
   loading = false,
   onCancel,
   onConfirm,
@@ -51,7 +52,7 @@ export function ConfirmDialog({
           <div className="modal-icon">
             <AlertTriangle size={18} />
           </div>
-          <button type="button" className="mini-icon-btn" onClick={onCancel} aria-label="Close">
+          <button type="button" className="mini-icon-btn" onClick={onCancel} aria-label={t("Close")}>
             <X size={15} />
           </button>
         </div>
@@ -59,10 +60,10 @@ export function ConfirmDialog({
         <p>{description}</p>
         <div className="modal-actions">
           <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={loading}>
-            Cancel
+            {t("Cancel")}
           </button>
           <button type="button" className="btn btn-danger" onClick={onConfirm} disabled={loading}>
-            {loading ? "Deleting…" : confirmLabel}
+            {loading ? t("Deleting…") : confirmLabel}
           </button>
         </div>
       </div>

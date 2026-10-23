@@ -10,27 +10,28 @@ import { OrderDrawer } from "../components/OrderDrawer";
 import { StatusBadge } from "../components/StatusBadge";
 import { Avatar } from "../components/Avatar";
 import { EmptyState } from "../components/EmptyState";
-import { formatCompact, formatDate, initials, pluralize } from "../lib/format";
+import { formatCompact, formatDate, initials } from "../lib/format";
+import { plural, t } from "../i18n";
 
 type StatusFilter = "all" | OrderStatus;
 
 const openStatuses: OrderStatus[] = ["new", "design", "production", "install"];
 
 const statusTabs: Array<{ value: StatusFilter; label: string }> = [
-  { value: "all", label: "All" },
-  { value: "new", label: "New" },
-  { value: "design", label: "Design" },
-  { value: "production", label: "Production" },
-  { value: "install", label: "Install" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
+  { value: "all", label: t("All") },
+  { value: "new", label: t("New") },
+  { value: "design", label: t("Design") },
+  { value: "production", label: t("Production") },
+  { value: "install", label: t("Install") },
+  { value: "completed", label: t("Completed") },
+  { value: "cancelled", label: t("Cancelled") },
 ];
 
 const stageSteps = [
-  { key: "design", label: "Design", at: 1 },
-  { key: "production", label: "Production", at: 2 },
-  { key: "install", label: "Install", at: 3 },
-  { key: "completed", label: "Handover", at: 4 },
+  { key: "design", label: t("Design"), at: 1 },
+  { key: "production", label: t("Production"), at: 2 },
+  { key: "install", label: t("Install"), at: 3 },
+  { key: "completed", label: t("Handover"), at: 4 },
 ];
 
 const statusIndex: Record<OrderStatus, number> = {
@@ -57,20 +58,20 @@ function productAccent(product: string) {
 
 function deadlineChip(order: Order) {
   if (order.status === "completed") {
-    return { label: `Closed ${formatDate(order.deadline, "short")}`, tone: "done" };
+    return { label: t("Closed {date}", { date: formatDate(order.deadline, "short") }), tone: "done" };
   }
-  if (order.status === "cancelled") return { label: "Cancelled", tone: "muted" };
-  if (!order.deadline) return { label: "No deadline", tone: "muted" };
+  if (order.status === "cancelled") return { label: t("Cancelled"), tone: "muted" };
+  if (!order.deadline) return { label: t("No deadline"), tone: "muted" };
 
   const deadline = new Date(`${order.deadline}T00:00:00`);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const days = Math.round((deadline.getTime() - today.getTime()) / 86_400_000);
 
-  if (days < 0) return { label: `${Math.abs(days)}d overdue`, tone: "overdue" };
-  if (days === 0) return { label: "Due today", tone: "today" };
-  if (days <= 7) return { label: `Due in ${days}d`, tone: "soon" };
-  return { label: `Due ${formatDate(order.deadline, "short")}`, tone: "normal" };
+  if (days < 0) return { label: t("{n}d overdue", { n: Math.abs(days) }), tone: "overdue" };
+  if (days === 0) return { label: t("Due today"), tone: "today" };
+  if (days <= 7) return { label: t("Due in {n}d", { n: days }), tone: "soon" };
+  return { label: t("Due {date}", { date: formatDate(order.deadline, "short") }), tone: "normal" };
 }
 
 export function OrdersPage() {
@@ -151,55 +152,55 @@ export function OrdersPage() {
       <PageHeader
         eyebrow={
           <>
-            Production <span style={{ color: "var(--color-line-strong)" }}>/</span> Orders
+            {t("Production")} <span style={{ color: "var(--color-line-strong)" }}>/</span> {t("Orders")}
           </>
         }
         title={
           <>
-            From concept, <em>to install.</em>
+            {t("From concept,")} <em>{t("to install.")}</em>
           </>
         }
-        subtitle="Every sign, lightbox, pylon and wrap — tracked from measurement and design through fabrication, print and the final site install."
+        subtitle={t("Every sign, lightbox, pylon and wrap — tracked from measurement and design through fabrication, print and the final site install.")}
         actions={
           <button type="button" className="btn btn-amber" onClick={createNew}>
-            <Plus size={15} /> New order
+            <Plus size={15} /> {t("New order")}
           </button>
         }
       />
 
       <section className="summary-strip animate-up" style={{ animationDelay: "50ms" }}>
         <div className="summary-block">
-          <span className="micro-label">Open orders</span>
+          <span className="micro-label">{t("Open orders")}</span>
           <strong>
-            {stats.openCount} <span>JOBS</span>
+            {stats.openCount} <span>{t("JOBS")}</span>
           </strong>
-          <div className="summary-note">In design, production or install</div>
+          <div className="summary-note">{t("In design, production or install")}</div>
         </div>
         <div className="summary-block">
-          <span className="micro-label">Quoted value</span>
+          <span className="micro-label">{t("Quoted value")}</span>
           <strong>
-            {formatCompact(stats.openValue)} <span>UZS</span>
+            {formatCompact(stats.openValue)} <span>{t("UZS")}</span>
           </strong>
-          <div className="summary-note">Value of open work</div>
+          <div className="summary-note">{t("Value of open work")}</div>
         </div>
         <div className="summary-block">
-          <span className="micro-label">On the floor</span>
+          <span className="micro-label">{t("On the floor")}</span>
           <strong>
-            {stats.inProduction} <span>IN PRODUCTION</span>
+            {stats.inProduction} <span>{t("IN PRODUCTION")}</span>
           </strong>
-          <div className="summary-note">Currently being fabricated</div>
+          <div className="summary-note">{t("Currently being fabricated")}</div>
         </div>
         <div className="summary-block">
-          <span className="micro-label">Balance due</span>
+          <span className="micro-label">{t("Balance due")}</span>
           <strong style={{ color: stats.outstanding > 0 ? "var(--color-terracotta)" : "var(--color-positive)" }}>
-            {formatCompact(stats.outstanding)} <span>UZS</span>
+            {formatCompact(stats.outstanding)} <span>{t("UZS")}</span>
           </strong>
-          <div className="summary-note">Still to collect from clients</div>
+          <div className="summary-note">{t("Still to collect from clients")}</div>
         </div>
       </section>
 
       <div className="page-toolbar animate-up" style={{ animationDelay: "80ms" }}>
-        <div className="tabs" role="tablist" aria-label="Filter orders by stage">
+        <div className="tabs" role="tablist" aria-label={t("Filter orders by stage")}>
           {statusTabs.map((tab) => (
             <button
               type="button"
@@ -222,13 +223,13 @@ export function OrdersPage() {
           <input
             className="input"
             style={{ height: 38, paddingLeft: 33, fontSize: 11 }}
-            placeholder="Search order no., client, site or product…"
+            placeholder={t("Search order no., client, site or product…")}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
         </div>
         <span className="mono" style={{ fontSize: 8.5, color: "var(--color-muted)", marginLeft: "auto" }}>
-          {pluralize(filtered.length, "order")}
+          {plural(filtered.length, { en: ["{n} order", "{n} orders"], ru: ["{n} заказ", "{n} заказа", "{n} заказов"], uz: "{n} ta buyurtma" })}
         </span>
       </div>
 
@@ -248,11 +249,11 @@ export function OrdersPage() {
         <div className="card">
           <EmptyState
             icon={<FolderKanban size={21} />}
-            title="No orders in this view"
-            description="Try a different production stage or search term, or start a new signage order."
+            title={t("No orders in this view")}
+            description={t("Try a different production stage or search term, or start a new signage order.")}
             action={
               <button type="button" className="btn btn-primary" onClick={createNew}>
-                <Plus size={14} /> New order
+                <Plus size={14} /> {t("New order")}
               </button>
             }
           />
@@ -287,34 +288,34 @@ export function OrdersPage() {
                   </div>
 
                   <div className="order-product-line">
-                    <span className="order-product">{order.product}</span>
+                    <span className="order-product">{t(order.product)}</span>
                     <span className={`deadline-chip ${deadline.tone}`}>
                       <CalendarDays size={10} /> {deadline.label}
                     </span>
                   </div>
 
                   <div className="order-location">
-                    <MapPin /> {order.site || "Installation site not set"}
+                    <MapPin /> {order.site || t("Installation site not set")}
                   </div>
 
                   <div className="order-finance">
                     <div>
-                      <span>Quote</span>
-                      <strong>UZS {formatCompact(order.quote)}</strong>
+                      <span>{t("Quote")}</span>
+                      <strong>{t("UZS {amount}", { amount: formatCompact(order.quote) })}</strong>
                     </div>
                     <div>
-                      <span>Paid</span>
-                      <strong>UZS {formatCompact(order.income)}</strong>
+                      <span>{t("Paid")}</span>
+                      <strong>{t("UZS {amount}", { amount: formatCompact(order.income) })}</strong>
                     </div>
                     <div>
-                      <span>Balance</span>
+                      <span>{t("Balance")}</span>
                       <strong className={order.balance > 0 ? "due" : "profit"}>
-                        UZS {formatCompact(order.balance)}
+                        {t("UZS {amount}", { amount: formatCompact(order.balance) })}
                       </strong>
                     </div>
                   </div>
 
-                  <div className="order-stage" aria-label={`Production stage: ${order.status}`}>
+                  <div className="order-stage" aria-label={t("Production stage: {status}", { status: t(order.status) })}>
                     {stageSteps.map((step) => {
                       const state = stage > step.at ? "done" : stage === step.at || (stage === 0 && step.at === 1) ? "current" : "";
                       return (
@@ -333,10 +334,10 @@ export function OrdersPage() {
                           <Avatar key={worker.id} name={worker.name} color={worker.avatarColor} size={23} />
                         ))}
                       </div>
-                      <span>{order.crew.length ? pluralize(order.crew.length, "person", "people") : "No crew"}</span>
+                      <span>{order.crew.length ? plural(order.crew.length, { en: ["{n} person", "{n} people"], ru: ["{n} человек", "{n} человека", "{n} человек"], uz: "{n} kishi" }) : t("No crew")}</span>
                     </div>
                     <span className="order-format">
-                      {order.priority === "high" ? "High priority" : "View order"} <ArrowUpRight size={10} style={{ display: "inline", verticalAlign: "-1px" }} />
+                      {order.priority === "high" ? t("High priority") : t("View order")} <ArrowUpRight size={10} style={{ display: "inline", verticalAlign: "-1px" }} />
                     </span>
                   </div>
                 </div>

@@ -21,6 +21,7 @@ npm run video  # in another → video/zdreklama-demo.mp4
 - **Team** — worker profiles with department, contact details, salary, hire date, order assignments, payroll history, material usage, and a one-click **Pay salary** flow.
 - **Clients** — brand accounts with contacts, industry, money received, order history, active orders, and last payment date.
 - **Command palette** — press `⌘K` / `Ctrl+K` to jump to any page or search products, tools, orders, clients, materials, workers, and ledger entries.
+- **Languages** — switch between Uzbek (default), Russian, and English from the sidebar. The sign-in page follows the same language choice.
 
 ## Order workflow
 
@@ -58,7 +59,7 @@ The catalog is intentionally separate from the fixed order-level product enum. O
 - **Database:** SQLite through Node's built-in `node:sqlite` module
 - **Fonts:** Manrope and DM Mono, bundled locally with Fontsource
 
-No external services or credentials are required.
+No external services are required. User accounts and the SQLite database stay on your machine.
 
 ## Getting started
 
@@ -136,6 +137,24 @@ PORT=8080 npm start
 
 SQLite data lives at `server/data/zdreklama.db` and is ignored by Git. Back up that file to preserve company data. Deleting it (or running `npm run seed`) resets the system to the demo dataset.
 
+## Users and login
+
+The dashboard is behind a sign-in page. Users live in `server/data/auth.json` (scrypt-hashed passwords, ignored by Git); sessions are HMAC-signed cookies valid for 30 days. Ten failed attempts from one IP lock it out for 15 minutes.
+
+```bash
+node server/auth.js set-password admin   # create a user or change their password
+node server/auth.js list                 # list users
+node server/auth.js remove admin         # delete a user
+```
+
+Create at least one user before first use, or nobody can sign in. `/api/health` and `/login` are the only public routes.
+
+## Languages
+
+The interface defaults to **Uzbek** and can be switched to **Russian** or **English** from the sidebar. The choice is stored in the `zd_lang` cookie, so the server-rendered login page and the dashboard stay in the same language. API error messages are translated in the browser through the same dictionary.
+
+Translation strings live in `src/i18n/locales/`. Run `node --experimental-strip-types scripts/check-i18n.mjs` to list any `t("...")` keys missing an Uzbek or Russian translation.
+
 ## Data model
 
 | Table | Purpose |
@@ -168,10 +187,11 @@ SQLite data lives at `server/data/zdreklama.db` and is ignored by Git. Back up t
 
 ## API overview
 
-All routes return JSON. Errors use `{ "error": "..." }` with an appropriate HTTP status.
+All `/api` routes require a valid session cookie except `/api/health`. JSON errors use `{ "error": "..." }` with an appropriate HTTP status.
 
 ```text
 GET    /api/health
+GET    /api/me
 GET    /api/dashboard
 GET    /api/bootstrap
 GET    /api/search?q=
@@ -216,12 +236,14 @@ Order statuses are `new`, `design`, `production`, `install`, `completed`, and `c
 ```text
 server/
   index.js        Express API, queries, validation, static serving
+  auth.js         Password login, sessions, and the login page
   db.js           SQLite connection and schema
   seed.js         Demo dataset and reset
-  data/           SQLite database (ignored by Git)
+  data/           SQLite database and auth store (ignored by Git)
 src/
   pages/          Dashboard, Money, Orders, Products, Materials, Team, Clients
   components/     Layout, sheets, drawers, dialogs, palette, shared UI
+  i18n/           Uzbek, Russian, and English dictionaries
   api.ts          Typed API client
   types.ts        Shared frontend types
   index.css       Design system and responsive rules
@@ -234,7 +256,7 @@ video/
 
 ## Assumptions and scope
 
-- This is an internal workshop tool. There is no authentication or role-based access yet; add auth and per-user permissions before exposing it on the public internet.
+- Every page and API route requires a password login (see **Users and login**). There is no role-based access: all users see everything.
 - Currency is UZS, dates use the local operating timezone, and the workshop is based in Kokand, Uzbekistan.
 - Demo people, order history, and figures are fictional. Client names are used only to make the demo dataset feel like real signage work.
 - Existing ledger databases receive additive schema upgrades for the catalog columns. Other schema changes may still require a database reset or a manual migration.

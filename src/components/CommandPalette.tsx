@@ -17,16 +17,17 @@ import {
 } from "lucide-react";
 import { api } from "../api";
 import type { SearchResult } from "../types";
-import { formatCompact } from "../lib/format";
+import { formatCompact, formatNumber } from "../lib/format";
+import { t } from "../i18n";
 
 const navItems = [
-  { title: "Overview", subtitle: "Production and finance dashboard", path: "/", icon: LayoutDashboard },
-  { title: "Money", subtitle: "Income and expense ledger", path: "/money", icon: Wallet },
-  { title: "Orders", subtitle: "Signage production board", path: "/orders", icon: FolderKanban },
-  { title: "Products", subtitle: "Product and equipment catalog", path: "/products", icon: Package },
-  { title: "Materials", subtitle: "Stock, usage and replenishment", path: "/materials", icon: Boxes },
-  { title: "Team", subtitle: "Worker profiles and payroll", path: "/team", icon: Users },
-  { title: "Clients", subtitle: "Brand accounts and contacts", path: "/clients", icon: Building2 },
+  { title: t("Overview"), subtitle: t("Production and finance dashboard"), path: "/", icon: LayoutDashboard },
+  { title: t("Money"), subtitle: t("Income and expense ledger"), path: "/money", icon: Wallet },
+  { title: t("Orders"), subtitle: t("Signage production board"), path: "/orders", icon: FolderKanban },
+  { title: t("Products"), subtitle: t("Product and equipment catalog"), path: "/products", icon: Package },
+  { title: t("Materials"), subtitle: t("Stock, usage and replenishment"), path: "/materials", icon: Boxes },
+  { title: t("Team"), subtitle: t("Worker profiles and payroll"), path: "/team", icon: Users },
+  { title: t("Clients"), subtitle: t("Brand accounts and contacts"), path: "/clients", icon: Building2 },
 ];
 
 const resultIcons: Record<SearchResult["type"], typeof Wallet> = {
@@ -40,14 +41,53 @@ const resultIcons: Record<SearchResult["type"], typeof Wallet> = {
 };
 
 const resultLabels: Record<SearchResult["type"], string> = {
-  order: "Orders",
-  client: "Clients",
-  worker: "Team",
-  material: "Materials",
-  transaction: "Ledger entries",
-  product: "Products",
-  tool: "Tools & equipment",
+  order: t("Orders"),
+  client: t("Clients"),
+  worker: t("Team"),
+  material: t("Materials"),
+  transaction: t("Ledger entries"),
+  product: t("Products"),
+  tool: t("Tools & equipment"),
 };
+
+// Build the result subtitle from structured fields so it follows the chosen language.
+function subtitleFor(result: SearchResult): string {
+  switch (result.type) {
+    case "transaction":
+      if (!result.txType) break;
+      return [result.txType === "income" ? t("Money in") : t("Money out"), result.category && t(result.category)]
+        .filter(Boolean)
+        .join(" · ");
+    case "order":
+      if (!result.orderNumber) break;
+      return [result.orderNumber, result.clientName ?? t("Internal"), result.status && t(result.status)]
+        .filter(Boolean)
+        .join(" · ");
+    case "material":
+      if (result.stock === undefined) break;
+      return [
+        t("{qty} {unit} in stock", { qty: formatNumber(result.stock, 1), unit: t(result.unit || "") }),
+        result.low ? t("low stock") : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+    case "worker":
+      if (!result.role) break;
+      return [t(result.role), result.department && t(result.department)].filter(Boolean).join(" · ");
+    case "client":
+      if (!result.industry) break;
+      return [t(result.industry), result.contactName].filter(Boolean).join(" · ");
+    case "product":
+      if (!result.category) break;
+      return [t(result.category), result.unit ? t(result.unit) : "", result.archived ? t("archived") : ""]
+        .filter(Boolean)
+        .join(" · ");
+    case "tool":
+      if (!result.kind) break;
+      return [t(result.kind), result.archived ? t("archived") : ""].filter(Boolean).join(" · ");
+  }
+  return result.subtitle;
+}
 
 function targetFor(result: SearchResult) {
   if (result.type === "order") return `/orders?open=${result.id}`;
@@ -105,22 +145,22 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="command-box" role="dialog" aria-modal="true" aria-label="Search ZD REKLAMA">
+      <div className="command-box" role="dialog" aria-modal="true" aria-label={t("Search ZD REKLAMA")}>
         <div className="command-input-wrap">
           <Search size={17} />
           <input
             className="command-input"
             autoFocus
-            placeholder="Search products, tools, orders, clients…"
+            placeholder={t("Search products, tools, orders, clients…")}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
-          <span className="kbd">ESC</span>
+          <span className="kbd">{t("ESC")}</span>
         </div>
         <div className="command-results">
           {deferredQuery.length < 2 ? (
             <>
-              <div className="command-group-label">Go to</div>
+              <div className="command-group-label">{t("Go to")}</div>
               {navItems.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -138,9 +178,11 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               })}
             </>
           ) : isFetching && !results.length ? (
-            <div className="command-empty">Searching the whole operation…</div>
+            <div className="command-empty">{t("Searching the whole operation…")}</div>
           ) : !results.length ? (
-            <div className="command-empty">No matches for “{deferredQuery}”. Try a client, order or material.</div>
+            <div className="command-empty">
+              {t("No matches for “{query}”. Try a client, order or material.", { query: deferredQuery })}
+            </div>
           ) : (
             Object.entries(grouped).map(([type, items]) => {
               const Icon = resultIcons[type as SearchResult["type"]];
@@ -154,10 +196,10 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                       </span>
                       <span className="command-main">
                         <span className="command-title">{result.title}</span>
-                        <span className="command-subtitle">{result.subtitle}</span>
+                        <span className="command-subtitle">{subtitleFor(result)}</span>
                       </span>
                       {result.meta !== undefined && (
-                        <span className="command-meta">UZS {formatCompact(result.meta, 1)}</span>
+                        <span className="command-meta">{t("UZS {amount}", { amount: formatCompact(result.meta, 1) })}</span>
                       )}
                     </button>
                   ))}
@@ -167,7 +209,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
           )}
         </div>
         <div className="command-footer">
-          <span>Search across the full platform</span>
+          <span>{t("Search across the full platform")}</span>
           <span className="mono">⌘ K</span>
         </div>
       </div>

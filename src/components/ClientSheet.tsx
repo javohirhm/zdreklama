@@ -6,6 +6,7 @@ import type { Client } from "../types";
 import { invalidateData } from "../lib/invalidate";
 import { Sheet } from "../components/Sheet";
 import { useToast } from "../components/ToastProvider";
+import { t } from "../i18n";
 
 interface ClientSheetProps {
   open: boolean;
@@ -46,7 +47,10 @@ export function ClientSheet({ open, onClose, client }: ClientSheetProps) {
     },
     onSuccess: () => {
       invalidateData(queryClient);
-      toast.success(client ? "Client updated" : "Client added", `${form.name} is now in the client portfolio.`);
+      toast.success(
+        client ? t("Client updated") : t("Client added"),
+        t("{name} is now in the client portfolio.", { name: form.name })
+      );
       onClose();
     },
     onError: (mutationError: Error) => setError(mutationError.message),
@@ -55,7 +59,7 @@ export function ClientSheet({ open, onClose, client }: ClientSheetProps) {
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (!form.name.trim()) return setError("Enter the client or brand name.");
+    if (!form.name.trim()) return setError(t("Enter the client or brand name."));
     mutation.mutate();
   };
 
@@ -63,16 +67,16 @@ export function ClientSheet({ open, onClose, client }: ClientSheetProps) {
     <Sheet
       open={open}
       onClose={onClose}
-      title={client ? "Edit client account" : "New client account"}
-      subtitle={client ? "Keep the brand and contact details up to date." : "Set up the brand before attaching orders."}
+      title={client ? t("Edit client account") : t("New client account")}
+      subtitle={client ? t("Keep the brand and contact details up to date.") : t("Set up the brand before attaching orders.")}
       footer={
         <>
           <button type="button" className="btn btn-ghost" onClick={onClose} disabled={mutation.isPending}>
-            Cancel
+            {t("Cancel")}
           </button>
           <div className="sheet-footer-actions">
             <button form="client-form" type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving…" : client ? "Save changes" : "Add client"}
+              {mutation.isPending ? t("Saving…") : client ? t("Save changes") : t("Add client")}
             </button>
           </div>
         </>
@@ -81,7 +85,7 @@ export function ClientSheet({ open, onClose, client }: ClientSheetProps) {
       <form id="client-form" className="form-grid" onSubmit={submit}>
         <div className="field">
           <label className="field-label" htmlFor="client-name">
-            Client / brand name
+            {t("Client / brand name")}
           </label>
           <div style={{ position: "relative" }}>
             <Building2
@@ -92,7 +96,7 @@ export function ClientSheet({ open, onClose, client }: ClientSheetProps) {
               id="client-name"
               className="input"
               style={{ paddingLeft: 31 }}
-              placeholder="e.g. Uzum Market"
+              placeholder={t("e.g. Uzum Market")}
               value={form.name}
               onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
               autoFocus
@@ -102,12 +106,12 @@ export function ClientSheet({ open, onClose, client }: ClientSheetProps) {
 
         <div className="field">
           <label className="field-label" htmlFor="client-industry">
-            Industry
+            {t("Industry")}
           </label>
           <input
             id="client-industry"
             className="input"
-            placeholder="e.g. E-commerce, Banking, FMCG"
+            placeholder={t("e.g. E-commerce, Banking, FMCG")}
             value={form.industry}
             onChange={(event) => setForm((current) => ({ ...current, industry: event.target.value }))}
           />
@@ -115,12 +119,12 @@ export function ClientSheet({ open, onClose, client }: ClientSheetProps) {
 
         <div className="field">
           <label className="field-label" htmlFor="client-contact">
-            Main contact
+            {t("Main contact")}
           </label>
           <input
             id="client-contact"
             className="input"
-            placeholder="e.g. Shahzod Ismoilov"
+            placeholder={t("e.g. Shahzod Ismoilov")}
             value={form.contactName}
             onChange={(event) => setForm((current) => ({ ...current, contactName: event.target.value }))}
           />
@@ -129,7 +133,7 @@ export function ClientSheet({ open, onClose, client }: ClientSheetProps) {
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="client-phone">
-              Phone
+              {t("Phone")}
             </label>
             <div style={{ position: "relative" }}>
               <Phone
@@ -148,7 +152,7 @@ export function ClientSheet({ open, onClose, client }: ClientSheetProps) {
           </div>
           <div className="field">
             <label className="field-label" htmlFor="client-email">
-              Email
+              {t("Email")}
             </label>
             <div style={{ position: "relative" }}>
               <Mail
@@ -170,7 +174,7 @@ export function ClientSheet({ open, onClose, client }: ClientSheetProps) {
 
         <div className="field">
           <label className="field-label" htmlFor="client-address">
-            Address
+            {t("Address")}
           </label>
           <div style={{ position: "relative" }}>
             <MapPin
@@ -181,7 +185,7 @@ export function ClientSheet({ open, onClose, client }: ClientSheetProps) {
               id="client-address"
               className="input"
               style={{ paddingLeft: 31 }}
-              placeholder="Kokand, district"
+              placeholder={t("Kokand, district")}
               value={form.address}
               onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))}
             />
@@ -200,7 +204,7 @@ export function ClientSheet({ open, onClose, client }: ClientSheetProps) {
             color: "var(--color-muted)",
           }}
         >
-          The client account connects order revenue, invoices and the team working on the brand.
+          {t("The client account connects order revenue, invoices and the team working on the brand.")}
         </div>
       </form>
     </Sheet>

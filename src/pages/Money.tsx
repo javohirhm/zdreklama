@@ -36,6 +36,7 @@ import {
   todayIso,
 } from "../lib/format";
 import { invalidateData } from "../lib/invalidate";
+import { plural, t } from "../i18n";
 
 type TypeFilter = "all" | "income" | "expense";
 
@@ -85,10 +86,10 @@ export function MoneyPage() {
     mutationFn: (id: number) => api.deleteTransaction(id),
     onSuccess: () => {
       invalidateData(queryClient);
-      toast.success("Entry deleted", "The ledger and reports have been updated.");
+      toast.success(t("Entry deleted"), t("The ledger and reports have been updated."));
       setDeleting(null);
     },
-    onError: (error: Error) => toast.error("Could not delete entry", error.message),
+    onError: (error: Error) => toast.error(t("Could not delete entry"), error.message),
   });
 
   const transactions = data?.transactions || [];
@@ -105,26 +106,31 @@ export function MoneyPage() {
 
   const exportLedger = () => {
     if (!transactions.length) {
-      toast.error("Nothing to export", "Adjust the filters so there are entries to download.");
+      toast.error(t("Nothing to export"), t("Adjust the filters so there are entries to download."));
       return;
     }
     downloadCsv(`zdreklama-ledger-${todayIso()}.csv`, transactions.map((transaction) => ({
-      Date: transaction.date,
-      Type: transaction.type,
-      Description: transaction.description,
-      Category: transaction.category,
-      Product: transaction.productName || "",
-      "Product type": transaction.productCategory || "",
-      Tool: transaction.toolName || "",
-      "Tool type": transaction.toolKind || "",
-      Client: transaction.clientName || "",
-      Order: transaction.orderName || "",
-      "Team member": transaction.workerName || "",
-      Method: transaction.method,
-      Reference: transaction.reference || "",
-      Amount: transaction.type === "income" ? transaction.amount : -transaction.amount,
+      [t("Date")]: transaction.date,
+      [t("Type")]: t(transaction.type),
+      [t("Description")]: transaction.description,
+      [t("Category")]: t(transaction.category),
+      [t("Product")]: transaction.productName || "",
+      [t("Product type")]: transaction.productCategory || "",
+      [t("Tool")]: transaction.toolName || "",
+      [t("Tool type")]: transaction.toolKind || "",
+      [t("Client")]: transaction.clientName || "",
+      [t("Order")]: transaction.orderName || "",
+      [t("Team member")]: transaction.workerName || "",
+      [t("Method")]: t(transaction.method),
+      [t("Reference")]: transaction.reference || "",
+      [t("Amount")]: transaction.type === "income" ? transaction.amount : -transaction.amount,
     })));
-    toast.success("Ledger exported", `${transactions.length} entries saved as CSV.`);
+    toast.success(
+      t("Ledger exported"),
+      t("{entries} saved as CSV.", {
+        entries: plural(transactions.length, { en: ["{n} entry", "{n} entries"], ru: ["{n} запись", "{n} записи", "{n} записей"], uz: "{n} ta yozuv" }),
+      })
+    );
   };
 
   return (
@@ -132,22 +138,22 @@ export function MoneyPage() {
       <PageHeader
         eyebrow={
           <>
-            Money <span style={{ color: "var(--color-line-strong)" }}>/</span> Ledger
+            {t("Money")} <span style={{ color: "var(--color-line-strong)" }}>/</span> {t("Ledger")}
           </>
         }
         title={
           <>
-            Every sum, <em>accounted for.</em>
+            {t("Every sum,")} <em>{t("accounted for.")}</em>
           </>
         }
-        subtitle="Record client payments and operating costs. Filter the ledger by month, order or type — the numbers stay connected to the rest of the platform."
+        subtitle={t("Record client payments and operating costs. Filter the ledger by month, order or type — the numbers stay connected to the rest of the platform.")}
         actions={
           <>
             <button type="button" className="btn btn-secondary" onClick={exportLedger}>
-              <Download size={14} /> Export CSV
+              <Download size={14} /> {t("Export CSV")}
             </button>
             <button type="button" className="btn btn-amber" onClick={() => openTransaction()}>
-              <Plus size={15} /> Record entry
+              <Plus size={15} /> {t("Record entry")}
             </button>
           </>
         }
@@ -155,46 +161,46 @@ export function MoneyPage() {
 
       <section className="summary-strip animate-up" style={{ animationDelay: "50ms" }}>
         <div className="summary-block">
-          <span className="micro-label">Money in</span>
+          <span className="micro-label">{t("Money in")}</span>
           <strong>
-            {formatCompact(summary.income)} <span>UZS</span>
+            {formatCompact(summary.income)} <span>{t("UZS")}</span>
           </strong>
-          <div className="summary-note">Selected period</div>
+          <div className="summary-note">{t("Selected period")}</div>
         </div>
         <div className="summary-block">
-          <span className="micro-label">Money out</span>
+          <span className="micro-label">{t("Money out")}</span>
           <strong>
-            {formatCompact(summary.expense)} <span>UZS</span>
+            {formatCompact(summary.expense)} <span>{t("UZS")}</span>
           </strong>
-          <div className="summary-note">Selected period</div>
+          <div className="summary-note">{t("Selected period")}</div>
         </div>
         <div className="summary-block">
-          <span className="micro-label">Net movement</span>
+          <span className="micro-label">{t("Net movement")}</span>
           <strong style={{ color: summary.net >= 0 ? "var(--color-positive)" : "var(--color-negative)" }}>
             {summary.net >= 0 ? "+" : "−"}
-            {formatCompact(Math.abs(summary.net))} <span>UZS</span>
+            {formatCompact(Math.abs(summary.net))} <span>{t("UZS")}</span>
           </strong>
-          <div className="summary-note">In minus out</div>
+          <div className="summary-note">{t("In minus out")}</div>
         </div>
         <div className="summary-block">
-          <span className="micro-label">Entries</span>
+          <span className="micro-label">{t("Entries")}</span>
           <strong>
-            {formatNumber(summary.count)} <span>ROWS</span>
+            {formatNumber(summary.count)} <span>{t("ROWS")}</span>
           </strong>
           <div className="summary-note">
-            {month === "all" ? "All recorded history" : `${monthKey(month)} ledger`}
+            {month === "all" ? t("All recorded history") : t("{month} ledger", { month: monthKey(month) })}
           </div>
         </div>
       </section>
 
       <section className="card animate-up" style={{ animationDelay: "90ms" }}>
         <div className="toolbar">
-          <div className="segmented" role="group" aria-label="Filter by transaction type">
+          <div className="segmented" role="group" aria-label={t("Filter by transaction type")}>
             {(
               [
-                { value: "all", label: "All entries" },
-                { value: "income", label: "Money in" },
-                { value: "expense", label: "Money out" },
+                { value: "all", label: t("All entries") },
+                { value: "income", label: t("Money in") },
+                { value: "expense", label: t("Money out") },
               ] as Array<{ value: TypeFilter; label: string }>
             ).map((option) => (
               <button
@@ -212,15 +218,15 @@ export function MoneyPage() {
             <Search />
             <input
               className="input"
-              placeholder="Search description, product, tool, client…"
+              placeholder={t("Search description, product, tool, client…")}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              aria-label="Search ledger"
+              aria-label={t("Search ledger")}
             />
           </div>
 
-          <select className="select" value={month} onChange={(event) => setMonth(event.target.value)} aria-label="Filter by month">
-            <option value="all">All time</option>
+          <select className="select" value={month} onChange={(event) => setMonth(event.target.value)} aria-label={t("Filter by month")}>
+            <option value="all">{t("All time")}</option>
             {!months.includes(currentMonthKey()) && <option value={currentMonthKey()}>{monthShort(currentMonthKey())}</option>}
             {months.map((item) => (
               <option value={item} key={item}>
@@ -229,8 +235,8 @@ export function MoneyPage() {
             ))}
           </select>
 
-          <select className="select" value={orderId} onChange={(event) => setOrderId(event.target.value)} aria-label="Filter by order">
-            <option value="all">All orders</option>
+          <select className="select" value={orderId} onChange={(event) => setOrderId(event.target.value)} aria-label={t("Filter by order")}>
+            <option value="all">{t("All orders")}</option>
             {(bootstrap?.orders || []).map((order) => (
               <option value={String(order.id)} key={order.id}>
                 {order.name}
@@ -240,14 +246,14 @@ export function MoneyPage() {
 
           {hasFilters && (
             <button type="button" className="btn btn-ghost btn-sm" onClick={resetFilters}>
-              <X size={13} /> Clear
+              <X size={13} /> {t("Clear")}
             </button>
           )}
         </div>
 
         <div className="toolbar-summary">
-          Showing <strong>{formatNumber(transactions.length)}</strong> entries
-          {search.trim() && <> matching “{search.trim()}”</>}
+          {t("Showing")} <strong>{formatNumber(transactions.length)}</strong> {t("entries")}
+          {search.trim() && <> {t("matching “{query}”", { query: search.trim() })}</>}
           {" · "}
           <span className="in">+{formatMoney(summary.income)}</span>
           {" · "}
@@ -263,17 +269,17 @@ export function MoneyPage() {
         ) : isError ? (
           <EmptyState
             icon={<Wallet size={20} />}
-            title="The ledger could not be loaded"
-            description="Check your connection and try refreshing the page."
+            title={t("The ledger could not be loaded")}
+            description={t("Check your connection and try refreshing the page.")}
           />
         ) : transactions.length === 0 ? (
           <EmptyState
             icon={<Filter size={20} />}
-            title="No entries match these filters"
-            description="Try widening the period, or record a new money movement."
+            title={t("No entries match these filters")}
+            description={t("Try widening the period, or record a new money movement.")}
             action={
               <button type="button" className="btn btn-primary" onClick={() => openTransaction()}>
-                <Plus size={14} /> Record entry
+                <Plus size={14} /> {t("Record entry")}
               </button>
             }
           />
@@ -282,14 +288,14 @@ export function MoneyPage() {
             <table className="data-table money-table">
               <thead>
                 <tr>
-                  <th>Entry</th>
-                  <th>Date</th>
-                  <th>Category</th>
-                  <th>Product / tool</th>
-                  <th>Order / client</th>
-                  <th>Method</th>
-                  <th style={{ textAlign: "right" }}>Amount</th>
-                  <th aria-label="Actions" />
+                  <th>{t("Entry")}</th>
+                  <th>{t("Date")}</th>
+                  <th>{t("Category")}</th>
+                  <th>{t("Product / tool")}</th>
+                  <th>{t("Order / client")}</th>
+                  <th>{t("Method")}</th>
+                  <th style={{ textAlign: "right" }}>{t("Amount")}</th>
+                  <th aria-label={t("Actions")} />
                 </tr>
               </thead>
               <tbody>
@@ -304,7 +310,7 @@ export function MoneyPage() {
                           <div className="cell-main" title={transaction.description}>
                             {transaction.description}
                           </div>
-                          <div className="cell-sub">{transaction.reference || `Entry #${transaction.id}`}</div>
+                          <div className="cell-sub">{transaction.reference || t("Entry #{id}", { id: transaction.id })}</div>
                         </div>
                       </div>
                     </td>
@@ -313,20 +319,26 @@ export function MoneyPage() {
                     </td>
                     <td>
                       <span className={`badge ${transaction.type === "income" ? "badge-income" : "badge-expense"}`}>
-                        {transaction.category}
+                        {t(transaction.category)}
                       </span>
                     </td>
                     <td>
                       {transaction.productName || transaction.toolName ? (
                         <div className="ledger-tags">
                           {transaction.productName && (
-                            <span className="ledger-tag-line product" title={transaction.productName}>
+                            <span
+                              className="ledger-tag-line product"
+                              title={`${transaction.productName}${transaction.productCategory ? ` · ${transaction.productCategory}` : ""}`}
+                            >
                               <Package />
                               <span>{transaction.productName}</span>
                             </span>
                           )}
                           {transaction.toolName && (
-                            <span className="ledger-tag-line" title={transaction.toolName}>
+                            <span
+                              className="ledger-tag-line"
+                              title={`${transaction.toolName}${transaction.toolKind ? ` · ${transaction.toolKind}` : ""}`}
+                            >
                               <Printer />
                               <span>{transaction.toolName}</span>
                             </span>
@@ -340,18 +352,22 @@ export function MoneyPage() {
                       <div
                         className="cell-main"
                         style={{ fontWeight: 600 }}
-                        title={transaction.orderName || transaction.clientName || "General overhead"}
+                        title={
+                          transaction.orderName ||
+                          transaction.clientName ||
+                          t("General overhead")
+                        }
                       >
-                        {transaction.orderName || transaction.clientName || "General overhead"}
+                        {transaction.orderName || transaction.clientName || t("General overhead")}
                       </div>
                       <div className="cell-sub">
                         {transaction.orderName && transaction.clientName
                           ? transaction.clientName
-                          : transaction.workerName || "Company-wide"}
+                          : transaction.workerName || t("Company-wide")}
                       </div>
                     </td>
                     <td className="mono" style={{ fontSize: 9, color: "var(--color-muted)" }}>
-                      {transaction.method}
+                      {t(transaction.method)}
                     </td>
                     <td className={transaction.type === "income" ? "amount-in" : "amount-out"}>
                       {transaction.type === "income" ? "+" : "−"}
@@ -363,7 +379,7 @@ export function MoneyPage() {
                           type="button"
                           className="mini-icon-btn"
                           onClick={() => setEditing(transaction)}
-                          aria-label={`Edit ${transaction.description}`}
+                          aria-label={t("Edit {name}", { name: transaction.description })}
                         >
                           <Pencil size={13} />
                         </button>
@@ -371,7 +387,7 @@ export function MoneyPage() {
                           type="button"
                           className="mini-icon-btn danger"
                           onClick={() => setDeleting(transaction)}
-                          aria-label={`Delete ${transaction.description}`}
+                          aria-label={t("Delete {name}", { name: transaction.description })}
                         >
                           <Trash2 size={13} />
                         </button>
@@ -389,10 +405,10 @@ export function MoneyPage() {
 
       <ConfirmDialog
         open={Boolean(deleting)}
-        title="Delete this ledger entry?"
+        title={t("Delete this ledger entry?")}
         description={
           deleting
-            ? `${deleting.description} · ${formatMoney(deleting.amount)}. This will also update order totals and dashboard figures. This cannot be undone.`
+            ? `${deleting.description} · ${formatMoney(deleting.amount)}. ${t("This will also update order totals and dashboard figures. This cannot be undone.")}`
             : ""
         }
         loading={deleteMutation.isPending}

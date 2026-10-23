@@ -8,6 +8,7 @@ import { invalidateData } from "../lib/invalidate";
 import { Sheet } from "../components/Sheet";
 import { Avatar } from "../components/Avatar";
 import { useToast } from "../components/ToastProvider";
+import { t } from "../i18n";
 
 interface OrderSheetProps {
   open: boolean;
@@ -28,18 +29,18 @@ const products = [
 ];
 
 const statuses = [
-  { value: "new", label: "New request" },
-  { value: "design", label: "In design" },
-  { value: "production", label: "In production" },
-  { value: "install", label: "Ready to install" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
+  { value: "new", label: t("New request") },
+  { value: "design", label: t("In design") },
+  { value: "production", label: t("In production") },
+  { value: "install", label: t("Ready to install") },
+  { value: "completed", label: t("Completed") },
+  { value: "cancelled", label: t("Cancelled") },
 ];
 
 const priorities = [
-  { value: "low", label: "Low" },
-  { value: "normal", label: "Normal" },
-  { value: "high", label: "High" },
+  { value: "low", label: t("low") },
+  { value: "normal", label: t("normal") },
+  { value: "high", label: t("high") },
 ];
 
 function emptyForm() {
@@ -104,7 +105,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
     },
     onSuccess: () => {
       invalidateData(queryClient);
-      toast.success(order ? "Order updated" : "Order created", `${form.name} is now on the production board.`);
+      toast.success(order ? t("Order updated") : t("Order created"), t("{name} is now on the production board.", { name: form.name }));
       onClose();
     },
     onError: (mutationError: Error) => setError(mutationError.message),
@@ -113,10 +114,10 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (!form.name.trim()) return setError("Give the order a name.");
-    if (!form.clientId) return setError("Choose the client account.");
+    if (!form.name.trim()) return setError(t("Give the order a name."));
+    if (!form.clientId) return setError(t("Choose the client account."));
     if (form.orderDate && form.deadline && form.deadline < form.orderDate) {
-      return setError("The deadline cannot be before the order date.");
+      return setError(t("The deadline cannot be before the order date."));
     }
     mutation.mutate();
   };
@@ -129,16 +130,16 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
     <Sheet
       open={open}
       onClose={onClose}
-      title={order ? "Edit order" : "New order"}
-      subtitle={order ? order.clientName : "Set up the client, product, quote and crew for a new production order."}
+      title={order ? t("Edit order") : t("New order")}
+      subtitle={order ? order.clientName : t("Set up the client, product, quote and crew for a new production order.")}
       footer={
         <>
           <button type="button" className="btn btn-ghost" onClick={onClose} disabled={mutation.isPending}>
-            Cancel
+            {t("Cancel")}
           </button>
           <div className="sheet-footer-actions">
             <button form="order-form" type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving…" : order ? "Save changes" : "Create order"}
+              {mutation.isPending ? t("Saving…") : order ? t("Save changes") : t("Create order")}
             </button>
           </div>
         </>
@@ -147,12 +148,12 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
       <form id="order-form" className="form-grid" onSubmit={submit}>
         <div className="field">
           <label className="field-label" htmlFor="order-name">
-            Order name
+            {t("Order name")}
           </label>
           <input
             id="order-name"
             className="input"
-            placeholder="e.g. Yuksak Travel — illuminated letters"
+            placeholder={t("e.g. Yuksak Travel — illuminated letters")}
             value={form.name}
             onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
             autoFocus
@@ -162,7 +163,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="order-client">
-              Client
+              {t("Client")}
             </label>
             <select
               id="order-client"
@@ -170,7 +171,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
               value={form.clientId}
               onChange={(event) => setForm((current) => ({ ...current, clientId: event.target.value }))}
             >
-              <option value="">Choose client</option>
+              <option value="">{t("Choose client")}</option>
               {(bootstrap?.clients || []).map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.name}
@@ -180,7 +181,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
           </div>
           <div className="field">
             <label className="field-label" htmlFor="order-product">
-              Product
+              {t("Product")}
             </label>
             <select
               id="order-product"
@@ -189,7 +190,9 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
               onChange={(event) => setForm((current) => ({ ...current, product: event.target.value }))}
             >
               {products.map((product) => (
-                <option key={product}>{product}</option>
+                <option key={product} value={product}>
+                  {t(product)}
+                </option>
               ))}
             </select>
           </div>
@@ -198,7 +201,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="order-quote">
-              Quote
+              {t("Quote")}
             </label>
             <input
               id="order-quote"
@@ -208,11 +211,11 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
               value={form.quote}
               onChange={(event) => setForm((current) => ({ ...current, quote: event.target.value.replace(/[^\d]/g, "") }))}
             />
-            <span className="field-hint">{form.quote ? formatMoney(Number(form.quote)) : "Agreed contract value in UZS."}</span>
+            <span className="field-hint">{form.quote ? formatMoney(Number(form.quote)) : t("Agreed contract value in UZS.")}</span>
           </div>
           <div className="field">
             <label className="field-label" htmlFor="order-status">
-              Production stage
+              {t("Production stage")}
             </label>
             <select
               id="order-status"
@@ -231,22 +234,22 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
 
         <div className="field">
           <label className="field-label" htmlFor="order-site">
-            Installation site
+            {t("Installation site")}
           </label>
           <input
             id="order-site"
             className="input"
-            placeholder="e.g. Kokand, Temur Malik St. 14"
+            placeholder={t("e.g. Kokand, Temur Malik St. 14")}
             value={form.site}
             onChange={(event) => setForm((current) => ({ ...current, site: event.target.value }))}
           />
-          <span className="field-hint">Where the finished sign or branding will be installed.</span>
+          <span className="field-hint">{t("Where the finished sign or branding will be installed.")}</span>
         </div>
 
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="order-date">
-              Order date
+              {t("Order date")}
             </label>
             <input
               id="order-date"
@@ -258,7 +261,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
           </div>
           <div className="field">
             <label className="field-label" htmlFor="order-deadline">
-              Deadline
+              {t("Deadline")}
             </label>
             <input
               id="order-deadline"
@@ -273,7 +276,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
         <div className="form-grid-2">
           <div className="field">
             <label className="field-label" htmlFor="order-priority">
-              Priority
+              {t("Priority")}
             </label>
             <select
               id="order-priority"
@@ -290,7 +293,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
           </div>
           <div className="field">
             <label className="field-label" htmlFor="order-manager">
-              Account manager
+              {t("Account manager")}
             </label>
             <select
               id="order-manager"
@@ -298,10 +301,10 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
               value={form.managerId}
               onChange={(event) => setForm((current) => ({ ...current, managerId: event.target.value }))}
             >
-              <option value="">Unassigned</option>
+              <option value="">{t("Unassigned")}</option>
               {(bootstrap?.workers || []).map((worker) => (
                 <option key={worker.id} value={worker.id}>
-                  {worker.name} — {worker.role}
+                  {worker.name} — {t(worker.role)}
                 </option>
               ))}
             </select>
@@ -310,7 +313,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
 
         <div className="field">
           <span className="field-label" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <Users size={12} /> Production crew
+            <Users size={12} /> {t("Production crew")}
           </span>
           <div className="chip-select">
             {(bootstrap?.workers || []).map((worker) => {
@@ -328,17 +331,17 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
               );
             })}
           </div>
-          <span className="field-hint">Crew members appear on the order and team profiles.</span>
+          <span className="field-hint">{t("Crew members appear on the order and team profiles.")}</span>
         </div>
 
         <div className="field">
           <label className="field-label" htmlFor="order-notes">
-            Notes
+            {t("Notes")}
           </label>
           <textarea
             id="order-notes"
             className="textarea"
-            placeholder="Materials, lighting, site access, client sign-off…"
+            placeholder={t("Materials, lighting, site access, client sign-off…")}
             value={form.notes}
             onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
           />
@@ -360,7 +363,7 @@ export function OrderSheet({ open, onClose, order }: OrderSheetProps) {
           }}
         >
           <CalendarDays size={13} />
-          The order will appear on the production board, in the ledger and on team assignments.
+          {t("The order will appear on the production board, in the ledger and on team assignments.")}
         </div>
       </form>
     </Sheet>

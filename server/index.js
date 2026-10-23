@@ -4,6 +4,7 @@ import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { db } from "./db.js";
 import { seedIfEmpty } from "./seed.js";
+import { installAuth } from "./auth.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -11,7 +12,9 @@ const PORT = Number(process.env.PORT || 4000);
 
 seedIfEmpty();
 
+app.set("trust proxy", "loopback");
 app.use(express.json({ limit: "1mb" }));
+installAuth(app, express);
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -414,6 +417,7 @@ app.get("/api/dashboard", (_req, res) => {
     const [y, m] = shiftMonth(currentKey, -i).split("-").map(Number);
     months.push({
       key: shiftMonth(currentKey, -i),
+      month: shiftMonth(currentKey, -i),
       label: new Date(y, m - 1, 1).toLocaleString("en-US", { month: "short" }),
       income: 0,
       expense: 0,
@@ -1242,6 +1246,8 @@ app.get("/api/search", (req, res) => {
       id: row.id,
       title: row.description,
       subtitle: `${row.type === "income" ? "Money in" : "Money out"} · ${row.category}${row.product_name ? ` · ${row.product_name}` : ""}`,
+      txType: row.type,
+      category: row.category,
       meta: row.amount,
       path: "/money",
     }));
@@ -1254,6 +1260,9 @@ app.get("/api/search", (req, res) => {
     id: product.id,
     title: product.name,
     subtitle: `${product.category} · ${product.unit}${product.active ? "" : " · archived"}`,
+    category: product.category,
+    unit: product.unit,
+    archived: !product.active,
     path: `/products?tab=products&search=${encodeURIComponent(product.name)}`,
   }));
 
@@ -1265,6 +1274,8 @@ app.get("/api/search", (req, res) => {
     id: tool.id,
     title: tool.name,
     subtitle: `${tool.kind}${tool.active ? "" : " · archived"}`,
+    kind: tool.kind,
+    archived: !tool.active,
     path: `/products?tab=tools&search=${encodeURIComponent(tool.name)}`,
   }));
 
@@ -1277,6 +1288,9 @@ app.get("/api/search", (req, res) => {
     id: p.id,
     title: p.name,
     subtitle: `${p.order_number} · ${p.client_name ?? "Internal"} · ${p.status}`,
+    orderNumber: p.order_number,
+    clientName: p.client_name ?? null,
+    status: p.status,
     path: `/orders?open=${p.id}`,
   }));
 
@@ -1287,6 +1301,9 @@ app.get("/api/search", (req, res) => {
       id: m.id,
       title: m.name,
       subtitle: `${m.stock} ${m.unit} in stock${Number(m.stock) <= Number(m.min_stock) ? " · low stock" : ""}`,
+      stock: Number(m.stock),
+      unit: m.unit,
+      low: Number(m.stock) <= Number(m.min_stock),
       path: "/materials",
     }));
 
@@ -1297,6 +1314,8 @@ app.get("/api/search", (req, res) => {
       id: w.id,
       title: w.name,
       subtitle: `${w.role} · ${w.department}`,
+      role: w.role,
+      department: w.department,
       path: "/team",
     }));
 
@@ -1307,6 +1326,8 @@ app.get("/api/search", (req, res) => {
       id: c.id,
       title: c.name,
       subtitle: `${c.industry}${c.contact_name ? ` · ${c.contact_name}` : ""}`,
+      industry: c.industry,
+      contactName: c.contact_name ?? null,
       path: "/clients",
     }));
 
@@ -1338,6 +1359,6 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ error: "Something went wrong. Please try again." });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, process.env.HOST || "0.0.0.0", () => {
   console.log(`ZD REKLAMA API running at http://localhost:${PORT}`);
 });

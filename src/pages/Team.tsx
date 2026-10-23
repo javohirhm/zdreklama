@@ -9,7 +9,8 @@ import { Avatar } from "../components/Avatar";
 import { WorkerSheet } from "../components/WorkerSheet";
 import { WorkerDrawer } from "../components/WorkerDrawer";
 import { EmptyState } from "../components/EmptyState";
-import { formatCompact, formatNumber, pluralize, statusLabel } from "../lib/format";
+import { formatCompact, formatNumber, statusLabel } from "../lib/format";
+import { plural, t } from "../i18n";
 
 const statusColors: Record<string, string> = {
   active: "#4b9569",
@@ -79,55 +80,61 @@ export function TeamPage() {
       <PageHeader
         eyebrow={
           <>
-            People <span style={{ color: "var(--color-line-strong)" }}>/</span> Crew
+            {t("People")} <span style={{ color: "var(--color-line-strong)" }}>/</span> {t("Crew")}
           </>
         }
         title={
           <>
-            The crew behind <em>the build.</em>
+            {t("The crew behind")} <em>{t("the build.")}</em>
           </>
         }
-        subtitle="Profiles for the people who design, print, fabricate, install and manage. Every order assignment, material movement and payroll entry rolls up to the person behind it."
+        subtitle={t("Profiles for the people who design, print, fabricate, install and manage. Every order assignment, material movement and payroll entry rolls up to the person behind it.")}
         actions={
           <button type="button" className="btn btn-amber" onClick={createNew}>
-            <Plus size={15} /> Add teammate
+            <Plus size={15} /> {t("Add teammate")}
           </button>
         }
       />
 
       <section className="summary-strip animate-up" style={{ animationDelay: "50ms" }}>
         <div className="summary-block">
-          <span className="micro-label">Team size</span>
+          <span className="micro-label">{t("Team size")}</span>
           <strong>
-            {workers.length} <span>PEOPLE</span>
+            {workers.length} <span>{t("PEOPLE")}</span>
           </strong>
-          <div className="summary-note">{departments.length} departments</div>
+          <div className="summary-note">
+            {plural(departments.length, {
+              en: ["{n} department", "{n} departments"],
+              ru: ["{n} отдел", "{n} отдела", "{n} отделов"],
+              uz: "{n} ta bo'lim",
+            })}
+          </div>
         </div>
         <div className="summary-block">
-          <span className="micro-label">Active crew</span>
+          <span className="micro-label">{t("Active crew")}</span>
           <strong>
-            {stats.active} <span>ON DUTY</span>
+            {stats.active} <span>{t("ON DUTY")}</span>
           </strong>
-          <div className="summary-note">{stats.onLeave} currently on leave</div>
+          <div className="summary-note">{t("{n} currently on leave", { n: stats.onLeave })}</div>
         </div>
         <div className="summary-block">
-          <span className="micro-label">Monthly payroll</span>
+          <span className="micro-label">{t("Monthly payroll")}</span>
           <strong>
-            {formatCompact(stats.payroll)} <span>UZS</span>
+            {formatCompact(stats.payroll)} <span>{t("UZS")}</span>
           </strong>
-          <div className="summary-note">Gross monthly salaries</div>
+          <div className="summary-note">{t("Gross monthly salaries")}</div>
         </div>
         <div className="summary-block">
-          <span className="micro-label">Order assignments</span>
+          <span className="micro-label">{t("Order assignments")}</span>
           <strong>
-            {formatNumber(stats.assignments)} <span>ACTIVE</span>
+            {formatNumber(stats.assignments)} <span>{t("ACTIVE")}</span>
           </strong>
-          <div className="summary-note">Across active production orders</div>
+          <div className="summary-note">{t("Across active production orders")}</div>
         </div>
       </section>
 
       <div className="page-toolbar animate-up" style={{ animationDelay: "80ms" }}>
-        <div className="tabs" role="tablist" aria-label="Filter by department">
+        <div className="tabs" role="tablist" aria-label={t("Filter by department")}>
           <button
             type="button"
             role="tab"
@@ -135,7 +142,7 @@ export function TeamPage() {
             className={`tab ${department === "all" ? "active" : ""}`}
             onClick={() => setDepartment("all")}
           >
-            Everyone <span className="tab-count">{workers.length}</span>
+            {t("Everyone")} <span className="tab-count">{workers.length}</span>
           </button>
           {departments.map((item) => {
             const count = workers.filter((worker) => worker.department === item).length;
@@ -148,7 +155,7 @@ export function TeamPage() {
                 key={item}
                 onClick={() => setDepartment(item)}
               >
-                {item} <span className="tab-count">{count}</span>
+                {t(item)} <span className="tab-count">{count}</span>
               </button>
             );
           })}
@@ -161,14 +168,18 @@ export function TeamPage() {
           <input
             className="input"
             style={{ height: 38, paddingLeft: 33, fontSize: 11 }}
-            placeholder="Search name, role or department…"
+            placeholder={t("Search name, role or department…")}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            aria-label="Search team"
+            aria-label={t("Search team")}
           />
         </div>
         <span className="mono" style={{ fontSize: 8.5, color: "var(--color-muted)", marginLeft: "auto" }}>
-          {pluralize(filtered.length, "person", "people")}
+          {plural(filtered.length, {
+            en: ["{n} person", "{n} people"],
+            ru: ["{n} человек", "{n} человека", "{n} человек"],
+            uz: "{n} kishi",
+          })}
         </span>
       </div>
 
@@ -187,11 +198,11 @@ export function TeamPage() {
         <div className="card">
           <EmptyState
             icon={<Users size={21} />}
-            title="No teammates in this view"
-            description="Try another department or search term, or add someone new to the crew."
+            title={t("No teammates in this view")}
+            description={t("Try another department or search term, or add someone new to the crew.")}
             action={
               <button type="button" className="btn btn-primary" onClick={createNew}>
-                <Plus size={14} /> Add teammate
+                <Plus size={14} /> {t("Add teammate")}
               </button>
             }
           />
@@ -216,33 +227,33 @@ export function TeamPage() {
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div className="worker-card-name">{worker.name}</div>
-                  <div className="worker-card-role">{worker.role}</div>
+                  <div className="worker-card-role">{t(worker.role)}</div>
                   <span className="worker-dept">
-                    {worker.department} · {statusLabel(worker.status)}
+                    {t(worker.department)} · {statusLabel(worker.status)}
                   </span>
                 </div>
               </div>
 
               <div className="worker-contact">
                 <div>
-                  <Phone /> {worker.phone || "No phone"}
+                  <Phone /> {worker.phone || t("No phone")}
                 </div>
                 <div>
-                  <Mail /> {worker.email || "No email"}
+                  <Mail /> {worker.email || t("No email")}
                 </div>
               </div>
 
               <div className="worker-stats">
                 <div className="worker-stat">
-                  <span>Monthly salary</span>
-                  <strong>{formatCompact(worker.salary)} UZS</strong>
+                  <span>{t("Monthly salary")}</span>
+                  <strong>{formatCompact(worker.salary)} {t("UZS")}</strong>
                 </div>
                 <div className="worker-stat" style={{ textAlign: "center" }}>
-                  <span>Orders</span>
-                  <strong>{worker.activeOrders} active</strong>
+                  <span>{t("Orders")}</span>
+                  <strong>{t("{n} active", { n: worker.activeOrders })}</strong>
                 </div>
                 <div className="worker-stat" style={{ textAlign: "right" }}>
-                  <span>Paid to date</span>
+                  <span>{t("Paid to date")}</span>
                   <strong>{formatCompact(worker.paidTotal)}</strong>
                 </div>
               </div>

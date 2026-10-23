@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { t } from "../i18n";
 
 interface SheetProps {
   open: boolean;
@@ -62,7 +63,7 @@ export function Sheet({ open, onClose, title, subtitle, children, footer, footer
               </h2>
               {subtitle && <div className="sheet-subtitle">{subtitle}</div>}
             </div>
-            <button type="button" className="sheet-close" onClick={onClose} aria-label="Close panel">
+            <button type="button" className="sheet-close" onClick={onClose} aria-label={t("Close panel")}>
               <X size={16} />
             </button>
           </header>

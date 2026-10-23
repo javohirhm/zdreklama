@@ -3932,3 +3932,106 @@ tr:focus-within .row-actions {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Profile menu + language switch */
+.profile-trigger {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+.profile-trigger:focus-visible {
+  outline: 2px solid var(--color-amber-deep);
+  outline-offset: 2px;
+}
+.profile-panel {
+  width: 250px;
+}
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 15px 16px;
+  border-bottom: 1px solid var(--color-line);
+}
+.profile-section {
+  padding: 8px;
+  border-bottom: 1px solid var(--color-line);
+}
+.profile-section:last-child {
+  border-bottom: 0;
+}
+.profile-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.profile-option {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.profile-option:hover {
+  background: var(--color-paper-warm);
+}
+.profile-option.active {
+  font-weight: 700;
+  color: var(--color-forest);
+  background: var(--color-sage-light);
+}
+.profile-logout {
+  color: var(--color-negative);
+}
+.lang-switch {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+}
+.lang-switch button {
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 9.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.lang-switch button.active {
+  background: var(--color-amber);
+  color: var(--color-ink);
+}
+.lang-switch-dark {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.lang-switch-dark button {
+  color: rgba(238, 240, 231, 0.55);
+}
+@media (max-width: 640px) {
+  .profile-panel {
+    left: auto !important;
+    width: 250px !important;
+  }
+}

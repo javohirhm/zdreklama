@@ -6,6 +6,7 @@ import type { CatalogTool } from "../types";
 import { invalidateData } from "../lib/invalidate";
 import { Sheet } from "../components/Sheet";
 import { useToast } from "../components/ToastProvider";
+import { t } from "../i18n";
 
 interface ToolSheetProps {
   open: boolean;
@@ -51,8 +52,8 @@ export function ToolSheet({ open, onClose, tool, kinds }: ToolSheetProps) {
       invalidateData(queryClient);
       const saved = "tool" in result ? result.tool : null;
       toast.success(
-        tool ? "Tool updated" : "Tool added",
-        `${saved?.name || form.name} is ready to tag on ledger entries.`
+        tool ? t("Tool updated") : t("Tool added"),
+        t("{name} is ready to tag on ledger entries.", { name: saved?.name || form.name })
       );
       onClose();
     },
@@ -62,8 +63,8 @@ export function ToolSheet({ open, onClose, tool, kinds }: ToolSheetProps) {
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (!form.name.trim()) return setError("Give the tool a name.");
-    if (!form.kind.trim()) return setError("Add an equipment type, such as printer, plotter or CNC.");
+    if (!form.name.trim()) return setError(t("Give the tool a name."));
+    if (!form.kind.trim()) return setError(t("Add an equipment type, such as printer, plotter or CNC."));
     mutation.mutate();
   };
 
@@ -71,20 +72,20 @@ export function ToolSheet({ open, onClose, tool, kinds }: ToolSheetProps) {
     <Sheet
       open={open}
       onClose={onClose}
-      title={tool ? "Edit tool" : "New tool"}
+      title={tool ? t("Edit tool") : t("New tool")}
       subtitle={
         tool
-          ? "Update how this equipment appears on money entries."
-          : "Add printers, plotters, routers, lifts or any other equipment."
+          ? t("Update how this equipment appears on money entries.")
+          : t("Add printers, plotters, routers, lifts or any other equipment.")
       }
       footer={
         <>
           <button type="button" className="btn btn-ghost" onClick={onClose} disabled={mutation.isPending}>
-            Cancel
+            {t("Cancel")}
           </button>
           <div className="sheet-footer-actions">
             <button form="tool-form" type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving…" : tool ? "Save changes" : "Add tool"}
+              {mutation.isPending ? t("Saving…") : tool ? t("Save changes") : t("Add tool")}
             </button>
           </div>
         </>
@@ -93,12 +94,12 @@ export function ToolSheet({ open, onClose, tool, kinds }: ToolSheetProps) {
       <form id="tool-form" className="form-grid" onSubmit={submit}>
         <div className="field">
           <label className="field-label" htmlFor="tool-name">
-            Tool / machine name
+            {t("Tool / machine name")}
           </label>
           <input
             id="tool-name"
             className="input"
-            placeholder="e.g. Large-format banner printer"
+            placeholder={t("e.g. Large-format banner printer")}
             value={form.name}
             onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
             autoFocus
@@ -107,13 +108,13 @@ export function ToolSheet({ open, onClose, tool, kinds }: ToolSheetProps) {
 
         <div className="field">
           <label className="field-label" htmlFor="tool-kind">
-            Equipment type
+            {t("Equipment type")}
           </label>
           <input
             id="tool-kind"
             className="input"
             list="tool-kind-options"
-            placeholder="e.g. Printer"
+            placeholder={t("e.g. Printer")}
             value={form.kind}
             onChange={(event) => setForm((current) => ({ ...current, kind: event.target.value }))}
           />
@@ -122,17 +123,17 @@ export function ToolSheet({ open, onClose, tool, kinds }: ToolSheetProps) {
               <option key={kind} value={kind} />
             ))}
           </datalist>
-          <span className="field-hint">The category shown next to the tool on ledger entries.</span>
+          <span className="field-hint">{t("The category shown next to the tool on ledger entries.")}</span>
         </div>
 
         <div className="field">
           <label className="field-label" htmlFor="tool-notes">
-            Notes <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· optional</span>
+            {t("Notes")} <span style={{ color: "var(--color-muted-light)", fontWeight: 500 }}>· {t("optional")}</span>
           </label>
           <textarea
             id="tool-notes"
             className="textarea"
-            placeholder="Width, capability, location or maintenance note."
+            placeholder={t("Width, capability, location or maintenance note.")}
             value={form.notes}
             onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
           />
@@ -146,8 +147,8 @@ export function ToolSheet({ open, onClose, tool, kinds }: ToolSheetProps) {
             onChange={(event) => setForm((current) => ({ ...current, active: event.target.checked }))}
           />
           <label htmlFor="tool-active">
-            Available for new ledger entries
-            <p>Archived equipment stays attached to old entries but disappears from new entry pickers.</p>
+            {t("Available for new ledger entries")}
+            <p>{t("Archived equipment stays attached to old entries but disappears from new entry pickers.")}</p>
           </label>
         </div>
 
@@ -166,7 +167,7 @@ export function ToolSheet({ open, onClose, tool, kinds }: ToolSheetProps) {
           }}
         >
           <Printer size={13} style={{ flexShrink: 0 }} />
-          Every tool you add becomes available in the money entry form and the ledger.
+          {t("Every tool you add becomes available in the money entry form and the ledger.")}
         </div>
       </form>
     </Sheet>
